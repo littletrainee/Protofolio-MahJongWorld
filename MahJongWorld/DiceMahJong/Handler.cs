@@ -158,7 +158,8 @@ namespace MahJongWorld.DiceMahJong
 
 				// each playercheck is ron or not
 				List<Player> tempOrder = Order;
-				CheckRon(tempOrder);
+				//CheckRon(tempOrder);
+				CheckRon();
 				if (IsRon(WhoRon(tempOrder)))
 				{
 					GameState.GameOn = false;
@@ -238,7 +239,7 @@ namespace MahJongWorld.DiceMahJong
 		protected override void Discard(ref Player player)
 		{
 
-			// Discard
+			// ManualDiscard
 			player.Discard();
 
 			// SortHand
@@ -250,12 +251,13 @@ namespace MahJongWorld.DiceMahJong
 		/// Check Ron
 		/// </summary>
 		/// <returns></returns>
-		protected override void CheckRon(List<Player> order)
+		//public override void CheckRon(List<Player> order)
+		public override void CheckRon()
 		{
 			// each player check Ron
-			for (int i = 1; i < order.Count; i++)
+			for (int i = 1; i < Order.Count; i++)
 			{
-				order[i].RonCheck(order[0].River);
+				Order[i].RonCheck(Order[0].River);
 			}
 			Task.WaitAll();
 		}

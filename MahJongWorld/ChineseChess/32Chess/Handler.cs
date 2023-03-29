@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -14,6 +13,8 @@ namespace MahJongWorld.ChineseChessMahJong
 		{
 			// Property
 			public Wall Wall { get; set; }
+
+			private State State { get; set; }
 
 
 
@@ -146,18 +147,18 @@ namespace MahJongWorld.ChineseChessMahJong
 
 			public override void Update()
 			{
-				// declare current state
+				// declare current State
 				int choice = 0;
 				int previousPlayerCode = 0;
 				int nextPlayerCode = 0;
-				State state = State.CheckTsumo;
+				State = State.CheckTsumo;
 				Player tempPlayer ;
 
 				while (GameState.GameOn)
 				{
 					// print to console
 					Print();
-					switch (state)
+					switch (State)
 					{
 						case State.CheckTsumo:
 						{
@@ -166,39 +167,44 @@ namespace MahJongWorld.ChineseChessMahJong
 							Order[0].TsumoCheck();
 							if (Order[0].IsWin)
 							{
-								state = State.IsTsumo;
+								State = State.IsTsumo;
 								GameState.GameOn = false;
+								Console.WriteLine("Tsumo");
+								Console.ReadLine();
 								break;
 							}
 							// if not tsumo then discard
-							state = State.Discard;
+							State = State.ManualDiscard;
 							GameState.NextRound(Order[0].Name);
 							break;
 						}
-						case State.Discard:
+						case State.ManualDiscard:
 						{
+							// TODO
 							tempPlayer = Order[0];
-							//tempGameState = GameState;
 							Discard(ref tempPlayer);
-							state = State.CheckRon;
+							State = State.CheckRon;
 							break;
 						}
+						case State.AutoDiscard:
+							// TODO
+							break;
 						case State.CheckRon:
 						{
 							// each player check is ron or not
-							List<Player> tempOrder = Order;
-							CheckRon(tempOrder);
-							(Player,Player) pair = WhoRon(tempOrder);
+							CheckRon();
+							(Player,Player) pair = WhoRon();
 							if (pair.Item1 != null)
 							{
-								//TODO pair.item1 is winner
-								state = State.IsRon;
+								//TODO
+								State = State.IsRon;
 								GameState.GameOn = false;
+								Console.WriteLine("Ron");
+								Console.ReadLine();
 								continue;
 							}
-							state = State.CheckMeld;
+							State = State.CheckMeld;
 							break;
-
 						}
 						case State.CheckMeld:
 						{
@@ -220,12 +226,12 @@ namespace MahJongWorld.ChineseChessMahJong
 								// player is select
 								if (choice != 0)
 								{
-									state = State.MakeMeld;
+									State = State.MakeMeld;
 									break;
 								}
 							}
 							// player no select
-							state = State.DrawFromWall;
+							State = State.DrawFromWall;
 							break;
 						}
 						case State.MakeMeld:
@@ -233,7 +239,7 @@ namespace MahJongWorld.ChineseChessMahJong
 							tempPlayer = Players[previousPlayerCode];
 							Players[nextPlayerCode].MakeChiMeld(choice, ref tempPlayer);
 							GameState.TurnNext();
-							state = State.Discard;
+							State = State.ManualDiscard;
 							ResetOrder();
 							break;
 						}
@@ -243,7 +249,7 @@ namespace MahJongWorld.ChineseChessMahJong
 							Players[nextPlayerCode].Draw(ref tempWall);
 							GameState.TurnNext();
 							ResetOrder();
-							state = State.CheckTsumo;
+							State = State.CheckTsumo;
 							break;
 						}
 					}
@@ -267,7 +273,7 @@ namespace MahJongWorld.ChineseChessMahJong
 			protected override void Discard(ref Player player)
 			{
 
-				// Discard
+				// ManualDiscard
 				player.Discard();
 
 				// SortHand
@@ -275,30 +281,39 @@ namespace MahJongWorld.ChineseChessMahJong
 			}
 
 
-			protected override void CheckRon(List<Player> order)
+			public override void CheckRon()
 			{
 				// each player check Ron
-				for (int i = 1; i < order.Count; i++)
+				for (int i = 1; i < Order.Count; i++)
 				{
-					order[i].RonCheck(order[0].River.Last());
+					Order[i].RonCheck(Order[0].River.Last());
 				}
 				Task.WaitAll();
 			}
 
 
-			private static (Player, Player) WhoRon(List<Player> order)
+			/// <summary>
+			/// Return who is Ron 
+			/// </summary>
+			/// <returns>item1 is who Ron and item2 is ron by who</returns>
+			private (Player, Player) WhoRon()
 			{
-				for (int i = 1; i < order.Count; i++)
+				for (int i = 1; i < Order.Count; i++)
 				{
-					if (order[i].IsWin)
+					if (Order[i].IsWin)
 					{
-						return (order[i], order[0]);
+						return (Order[i], Order[0]);
 					}
 				}
 				return (null, null);
 			}
 
 
+			/// <summary>
+			/// Ask Player want make meld or not, if confirm then Print and choose which one
+			/// </summary>
+			/// <param name="player"></param>
+			/// <returns>Not 0 meaning is choose,otherwise no </returns>
 			private static int AskMakeMeldAndChoose(Player player)
 			{
 				Console.Write("Want to Make Meld?(y/n)");
@@ -327,6 +342,12 @@ namespace MahJongWorld.ChineseChessMahJong
 
 			}
 
+
+			/// <summary>
+			/// if option more than one ask player which one make meld
+			/// </summary>
+			/// <param name="player"></param>
+			/// <returns></returns>
 			private static int ChooseOne(Player player)
 			{
 				Console.WriteLine();
@@ -355,10 +376,12 @@ namespace MahJongWorld.ChineseChessMahJong
 				}
 				Console.Write("Please Select Which One Want Make Meld:");
 				string choice;
+				int rt;
 				while (true)
 				{
 					choice = Console.ReadLine();
-					if (choice != "1" && choice != "2" && choice != "3")
+					bool ok = int.TryParse(choice, out rt);
+					if (choice != "1" && choice != "2" && choice != "3" || !ok || rt > player.HasMeld.Count)
 					{
 						Console.Write("Wrong Enter Please Renter: ");
 					}
@@ -367,7 +390,7 @@ namespace MahJongWorld.ChineseChessMahJong
 						break;
 					}
 				}
-				int rt = int.Parse(choice);
+
 				return rt;
 			}
 		}

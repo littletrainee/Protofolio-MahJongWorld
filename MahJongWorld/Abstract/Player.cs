@@ -47,11 +47,12 @@ namespace MahJongWorld.Abstract
 
 
 		/// <summary>
-		/// Determines whether <paramref name="target"/> is in the <paramref name="targetlist"/>.
+		///	Determines <paramref name="target"/> is in the <paramref name="targetlist"/> 
 		/// </summary>
-		/// <param name="targetlist"> target confirmed list </param>
-		/// <param name="target"> the target element </param>
-		/// <returns> true if item is found in the List<T>; otherwise, false. </returns>
+		/// <param name="targetlist">target confirmed list</param>
+		/// <param name="target">the target element</param>
+		/// <returns>true if item is found in the 
+		/// List&lt;<typeparamref name="T"/>&gt;; otherwise, false.</returns>
 		protected abstract bool CheckContains(List<T> targetlist, T target);
 
 
@@ -61,7 +62,7 @@ namespace MahJongWorld.Abstract
 		/// <param name="probablyEye"></param>
 		/// <param name="hand"></param>
 		/// <returns> return bool for is establish of winning </returns>
-		protected abstract void Establish(List<T> probablyEye, List<T> hand);
+		protected abstract bool Establish(List<T> probablyEye, List<T> hand);
 
 
 		/// <summary>
@@ -73,7 +74,7 @@ namespace MahJongWorld.Abstract
 		protected abstract void RemoveEye(T targetEye, ref List<T> orginal);
 
 		/// <summary>
-		/// Discard from Hand to River
+		/// ManualDiscard from Hand to River
 		/// </summary>
 		public abstract void Discard();
 	}

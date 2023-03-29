@@ -8,7 +8,7 @@ namespace MahJongWorld.Abstract
 	{
 		public List<T> Players { get; set; }
 		public GameState GameState { get; set; }
-		protected List<T> Order { get; set; }
+		public List<T> Order { get; set; }
 		protected PrintToConsole Print { get; set; }
 
 
@@ -64,7 +64,7 @@ namespace MahJongWorld.Abstract
 
 
 		/// <summary>
-		/// Player Discard From Hand To River
+		/// Player ManualDiscard From Hand To River
 		/// </summary>
 		/// <param name="player"></param>
 		protected abstract void Discard(ref T player);
@@ -74,7 +74,8 @@ namespace MahJongWorld.Abstract
 		/// Each Player Check Ron At Different Thread
 		/// </summary>
 		/// <param name="order">player list</param>
-		protected abstract void CheckRon(List<T> order);
+		//public abstract void CheckRon(List<T> order);
+		public abstract void CheckRon();
 
 	}
 }

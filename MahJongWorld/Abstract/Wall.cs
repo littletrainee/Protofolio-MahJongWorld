@@ -60,7 +60,7 @@ namespace MahJongWorld.Abstract
 				}
 				if (c == Hand.Last())
 				{
-					Console.WriteLine();
+					Console.WriteLine("\n");
 				}
 			}
 		}

@@ -113,7 +113,7 @@ namespace MahJongWorld.DiceMahJong
 				Player tempPlayer = new(){Hand= Hand.ToList()};
 				tempPlayer.Hand.Add(target);
 				tempPlayer.SortHand();
-				Establish(FindProbablyEye(tempPlayer.Hand), tempPlayer.Hand);
+				return Establish(FindProbablyEye(tempPlayer.Hand), tempPlayer.Hand);
 			});
 		}
 
@@ -148,7 +148,7 @@ namespace MahJongWorld.DiceMahJong
 		}
 
 
-		protected override void Establish(List<Dice> probablyEye, List<Dice> hand)
+		protected override bool Establish(List<Dice> probablyEye, List<Dice> hand)
 		{
 			foreach (Dice eye in probablyEye)
 			{
@@ -157,10 +157,10 @@ namespace MahJongWorld.DiceMahJong
 				if (temp[0].Number == temp[1].Number && temp[1].Number == temp[2].Number
 					|| temp[0].Number + 1 == temp[1].Number && temp[1].Number + 1 == temp[2].Number)
 				{
-					IsWin = true;
+					return true;
 				}
 			}
-			IsWin = false;
+			return false;
 		}
 
 

@@ -17,8 +17,6 @@ namespace MahJongWorld.ChineseChessMahJong
 
 
 
-
-
 		public void Initialization(string s)
 		{
 			Name = s;
@@ -148,22 +146,21 @@ namespace MahJongWorld.ChineseChessMahJong
 			Player tempPlayer = new(){Hand = Hand.ToList(),Meld = Meld.ToList()};
 			// sorthand
 			tempPlayer.SortHand();
-			Establish(FindProbablyEye(tempPlayer.Hand), tempPlayer.Hand);
+			IsWin = Establish(FindProbablyEye(tempPlayer.Hand), tempPlayer.Hand);
 		}
 
 
 		public override void RonCheck(Chess target)
 		{
-			Task Task = Task.Factory.StartNew(() =>
+			IsWin = Task.Factory.StartNew(() =>
 			{
 				// Clone player
 				Player tempPlayer = new(){Hand = Hand.ToList(),Meld = Meld.ToList()};
 				// sorthand
 				tempPlayer.Hand.Add(target);
 				tempPlayer.SortHand();
-				Establish(FindProbablyEye(tempPlayer.Hand), tempPlayer.Hand);
-				//Console.WriteLine(IsWin);
-			});
+				return Establish(FindProbablyEye(tempPlayer.Hand), tempPlayer.Hand);
+			}).Result;
 		}
 
 
@@ -207,7 +204,7 @@ namespace MahJongWorld.ChineseChessMahJong
 		}
 
 
-		protected override void Establish(List<Chess> probablyEye, List<Chess> hand)
+		protected override bool Establish(List<Chess> probablyEye, List<Chess> hand)
 		{
 			foreach (Chess eye in probablyEye)
 			{
@@ -215,7 +212,7 @@ namespace MahJongWorld.ChineseChessMahJong
 				RemoveEye(eye, ref temp);
 
 				// temp is empty
-				do
+				while (temp.Any())
 				{
 					Chess first = temp[0];
 					Chess second= new(){Number= temp[0].Number+1, Color= temp[0].Color,};
@@ -225,24 +222,28 @@ namespace MahJongWorld.ChineseChessMahJong
 						temp.Remove(first);
 						temp.RemoveAt(FindIndex(temp, second));
 						temp.RemoveAt(FindIndex(temp, third));
-						//continue;
-					}
-					else
-					{
-						break;
+						continue;
 					}
 
-				} while (temp.Any());
-				if (temp.Any())
-				{
-					IsWin = false;
-				}
-				else
-				{
-					IsWin = true;
+					if (ChessIsEqual(temp[0], temp[1]) &&
+						ChessIsEqual(temp[1], temp[2]) &&
+						ChessIsEqual(temp[0], temp[2]))
+					{
+						foreach (int _ in Enumerable.Range(0, 3))
+						{
+							temp.RemoveAt(FindIndex(temp, first));
+						}
+						continue;
+					}
 					break;
+
+				}
+				if (!temp.Any())
+				{
+					return true;
 				}
 			}
+			return false;
 		}
 
 
@@ -251,13 +252,10 @@ namespace MahJongWorld.ChineseChessMahJong
 			List<Chess> temp = orginal.ToList();
 			for (int i = 0; i < 2; i++)
 			{
-				temp.RemoveAt(orginal.IndexOf(targetEye));
+				temp.RemoveAt(FindIndex(orginal, targetEye));
 			}
 			orginal = temp;
 		}
-
-
-
 
 
 		public override void Discard()
@@ -308,7 +306,7 @@ namespace MahJongWorld.ChineseChessMahJong
 			}
 
 			// p1p2
-			if (!CheckContains(Hand, P1) && CheckContains(Hand, P2))
+			if (CheckContains(Hand, P1) && CheckContains(Hand, P2))
 			{
 				HasMeld.Add((Hand[FindIndex(Hand, P1)], Hand[FindIndex(Hand, P2)]));
 			}
@@ -333,8 +331,8 @@ namespace MahJongWorld.ChineseChessMahJong
 			});
 
 			// remove pair from Hand
-			Hand.RemoveAt(first);
 			Hand.RemoveAt(second);
+			Hand.RemoveAt(first);
 			// previousPlayer.River Remove Last one
 			previousPlayer.River.RemoveAt(previousPlayer.River.Count - 1);
 
@@ -363,5 +361,17 @@ namespace MahJongWorld.ChineseChessMahJong
 			return -1;
 		}
 
+
+
+		/// <summary>
+		/// Rewrite Equeal to fit this case
+		/// </summary>
+		/// <param name="first">The first chess to compare.</param>
+		/// <param name="second">The second chess to compare</param>
+		/// <returns>true if the chess are considered equal; otherwise false</returns>
+		private static bool ChessIsEqual(Chess first, Chess second)
+		{
+			return first.Number == second.Number && first.Color == second.Color;
+		}
 	}
 }

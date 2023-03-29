@@ -1,11 +1,12 @@
 ﻿namespace MahJongWorld.Shared
 {
-	public enum State
+	enum State
 	{
 		Draw,
 		CheckTsumo,
 		IsTsumo,
-		Discard,
+		ManualDiscard,
+		AutoDiscard,
 		CheckRon,
 		IsRon,
 		CheckMeld,
