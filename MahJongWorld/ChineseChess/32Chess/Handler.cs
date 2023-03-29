@@ -174,13 +174,19 @@ namespace MahJongWorld.ChineseChessMahJong
 								break;
 							}
 							// if not tsumo then discard
-							State = State.ManualDiscard;
 							GameState.NextRound(Order[0].Name);
+							State = State.AskDeclareTenPai;
+							break;
+						}
+						case State.AskDeclareTenPai:
+						{
+							tempPlayer = Order[0];
+							DeclareTenPai(ref tempPlayer);
+							State = State.ManualDiscard;
 							break;
 						}
 						case State.ManualDiscard:
 						{
-							// TODO
 							tempPlayer = Order[0];
 							Discard(ref tempPlayer);
 							State = State.CheckRon;
@@ -392,6 +398,30 @@ namespace MahJongWorld.ChineseChessMahJong
 				}
 
 				return rt;
+			}
+
+
+			public void DeclareTenPai(ref Player player)
+			{
+				string key;
+				Console.Write("Do You Want Declare TenPai?(y/n)");
+				while (true)
+				{
+					key = Console.ReadLine();
+					if (key != "y" && key != "n")
+					{
+						Console.Write("Wrong Enter Please Renter:");
+						key = "";
+					}
+					else
+					{
+						break;
+					}
+				}
+				if (key == "y")
+				{
+					player.TenPai = true;
+				}
 			}
 		}
 

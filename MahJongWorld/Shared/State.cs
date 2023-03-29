@@ -5,6 +5,7 @@
 		Draw,
 		CheckTsumo,
 		IsTsumo,
+		AskDeclareTenPai,
 		ManualDiscard,
 		AutoDiscard,
 		CheckRon,

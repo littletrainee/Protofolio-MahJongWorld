@@ -13,6 +13,7 @@ namespace MahJongWorld.ChineseChessMahJong
 		public List<List<Chess>> Meld { get; set; }
 		public List<Chess> River { get; set; }
 		public List<(Chess, Chess)> HasMeld { get; set; }
+		public bool TenPai { get; set; }
 
 
 
@@ -362,7 +363,6 @@ namespace MahJongWorld.ChineseChessMahJong
 		}
 
 
-
 		/// <summary>
 		/// Rewrite Equeal to fit this case
 		/// </summary>
@@ -372,6 +372,51 @@ namespace MahJongWorld.ChineseChessMahJong
 		private static bool ChessIsEqual(Chess first, Chess second)
 		{
 			return first.Number == second.Number && first.Color == second.Color;
+		}
+
+
+		public List<Chess> TenPaiCheck()
+		{
+			Chess probablyChess;
+			List<Chess> temphand = Hand.ToList();
+			List<Chess> cloneForPopOne;
+			List<Chess> removeOneFromClone;
+			List<Chess> probablywinTile = new ();
+			string[] color = new string[]{ "b","r"};
+
+			for (int i = 0; i < temphand.Count; i++)
+			{
+				// reset CloneForPopOne 
+				cloneForPopOne = temphand.ToList();
+				// remove one from clone for popone by temphandindex [5-4]
+				cloneForPopOne.RemoveAt(i);
+				foreach (string c in color)
+				{
+					for (int j = 0; j < 8; j++)
+					{
+						removeOneFromClone = cloneForPopOne.ToList();
+						probablyChess = new() { Number = j, Color = c };
+						cloneForPopOne.Add(probablyChess);
+						if (ProbablyWin(cloneForPopOne))
+						{
+							if (!CheckContains(probablywinTile, probablyChess))
+							{
+								probablywinTile.Add(probablyChess);
+							}
+						}
+					}
+				}
+			}
+			return probablywinTile;
+		}
+
+
+		private static bool ProbablyWin(List<Chess> source)
+		{
+			Player p = new(){Hand = source};
+			p.SortHand();
+			p.TsumoCheck();
+			return p.IsWin;
 		}
 	}
 }
