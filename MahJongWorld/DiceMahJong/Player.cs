@@ -118,7 +118,7 @@ namespace MahJongWorld.DiceMahJong
 		}
 
 
-		protected override List<Dice> FindProbablyEye(List<Dice> source)
+		public override List<Dice> FindProbablyEye(List<Dice> source)
 		{
 			List<Dice> result = new();
 			for (int i = 0; i < source.Count; i++)
@@ -205,6 +205,5 @@ namespace MahJongWorld.DiceMahJong
 			Hand.Add(previsousPlayerRiverDice);
 			previsousPlayerRiverDice = null;
 		}
-
 	}
 }

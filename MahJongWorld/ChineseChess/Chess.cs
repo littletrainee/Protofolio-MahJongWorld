@@ -1,4 +1,4 @@
-﻿namespace MahJongWorld.ChineseChess
+﻿namespace MahJongWorld.ChineseChessMahJong
 {
 	public class Chess
 	{

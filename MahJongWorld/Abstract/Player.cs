@@ -43,7 +43,7 @@ namespace MahJongWorld.Abstract
 		/// </summary>
 		/// <param name="source"> The Source of hand</param>
 		/// <returns> return a List of Probably Eye.</returns>
-		protected abstract List<T> FindProbablyEye(List<T> source);
+		public abstract List<T> FindProbablyEye(List<T> source);
 
 
 		/// <summary>

@@ -3,7 +3,13 @@
 	public enum State
 	{
 		Draw,
-		Tsumo,
-		Ron
+		CheckTsumo,
+		IsTsumo,
+		Discard,
+		CheckRon,
+		IsRon,
+		CheckMeld,
+		MakeMeld,
+		DrawFromWall
 	}
 }

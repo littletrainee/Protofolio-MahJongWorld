@@ -1,7 +1,10 @@
-﻿namespace MahJongWorld.Shared
+﻿using System;
+
+namespace MahJongWorld.Shared
 {
 	public class GameState
 	{
+		private string FirstPlayer { get; set; }
 		public bool GameOn { get; set; }
 		public int GameTurn { get; set; }
 		public int MaxPlayer { get; set; }
@@ -20,6 +23,12 @@
 			MaxPlayer = maxPlayer;
 		}
 
+		public void SetFirstPlayerName(string name)
+		{
+			FirstPlayer = name;
+		}
+
+
 
 		/// <summary>
 		/// Go To Next Round
@@ -27,7 +36,7 @@
 		/// <param name="name"></param>
 		public void NextRound(string name)
 		{
-			if (name == "Player 1")
+			if (name == FirstPlayer)
 			{
 				GameRound++;
 			}
@@ -47,6 +56,12 @@
 			{
 				GameTurn = 0;
 			}
+		}
+
+
+		public void PrintToConsole()
+		{
+			Console.WriteLine($"第 {GameRound} 巡");
 		}
 	}
 }

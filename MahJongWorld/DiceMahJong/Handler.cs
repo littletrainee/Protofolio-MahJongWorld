@@ -148,11 +148,12 @@ namespace MahJongWorld.DiceMahJong
 					GameState.GameOn = false;
 					continue;
 				}
+				GameState.TurnNext();
+				Print();
 
 				// if not tsumo then discard
 				Player tempPlayer = Order[0];
-				GameState tempGameState = GameState;
-				Discard(ref tempPlayer, ref tempGameState);
+				Discard(ref tempPlayer);
 				Print();
 
 				// each playercheck is ron or not
@@ -234,10 +235,8 @@ namespace MahJongWorld.DiceMahJong
 		}
 
 
-		protected override void Discard(ref Player player, ref GameState gameState)
+		protected override void Discard(ref Player player)
 		{
-			// Turn to Next Round
-			gameState.NextRound(player.Name);
 
 			// Discard
 			player.Discard();

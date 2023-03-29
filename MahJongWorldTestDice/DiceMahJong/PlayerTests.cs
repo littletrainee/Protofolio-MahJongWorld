@@ -34,7 +34,7 @@ namespace MahJongWorld.DiceMahJong.TestsDice
 			p.Hand.ForEach(x => { Console.Write($"{x.Number}, "); });
 			Console.WriteLine();
 			Player  tempp= p;
-			Player.SortHand(ref tempp);
+			//Player.SortHand(ref tempp);
 			p.Hand.ForEach(x => { Console.Write($"{x.Number}, "); });
 
 			Console.WriteLine(p.Hand);

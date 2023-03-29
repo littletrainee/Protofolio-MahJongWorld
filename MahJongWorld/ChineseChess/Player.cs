@@ -5,10 +5,11 @@ using System.Threading.Tasks;
 
 using MahJongWorld.Abstract;
 
-namespace MahJongWorld.ChineseChess
+namespace MahJongWorld.ChineseChessMahJong
 {
 	public class Player : AbstractPlayer<Chess>
 	{
+		public int Code { get; set; }
 		public List<List<Chess>> Meld { get; set; }
 		public List<Chess> River { get; set; }
 		public List<(Chess, Chess)> HasMeld { get; set; }
@@ -161,16 +162,27 @@ namespace MahJongWorld.ChineseChess
 				tempPlayer.Hand.Add(target);
 				tempPlayer.SortHand();
 				Establish(FindProbablyEye(tempPlayer.Hand), tempPlayer.Hand);
+				//Console.WriteLine(IsWin);
 			});
 		}
 
 
-		protected override List<Chess> FindProbablyEye(List<Chess> source)
+		public override List<Chess> FindProbablyEye(List<Chess> source)
 		{
+			(Chess,Chess) special = (
+				new(){Number= 1, Color= "b",Surface="將"},
+				new() {Number =1 , Color = "r", Surface ="帥"});
+			if (CheckContains(source, special.Item1) && CheckContains(source, special.Item2))
+			{
+				return new() { special.Item1, special.Item1 };
+			}
+
 			List<Chess> result = new();
 			for (int i = 0; i < source.Count; i++)
 			{
-				if (i != source.Count - 1 && source[i].Number == source[i + 1].Number && source[i].Color == source[i + 1].Color)
+				if (i != source.Count - 1 &&
+					source[i].Number == source[i + 1].Number &&
+					source[i].Color == source[i + 1].Color)
 				{
 					if (!CheckContains(result, source[i]))
 					{
@@ -203,7 +215,7 @@ namespace MahJongWorld.ChineseChess
 				RemoveEye(eye, ref temp);
 
 				// temp is empty
-				while (!temp.Any())
+				do
 				{
 					Chess first = temp[0];
 					Chess second= new(){Number= temp[0].Number+1, Color= temp[0].Color,};
@@ -211,15 +223,24 @@ namespace MahJongWorld.ChineseChess
 					if (CheckContains(temp, second) && CheckContains(temp, third))
 					{
 						temp.Remove(first);
-						temp.Remove(second);
-						temp.Remove(third);
-						IsWin = true;
-						continue;
+						temp.RemoveAt(FindIndex(temp, second));
+						temp.RemoveAt(FindIndex(temp, third));
+						//continue;
 					}
 					else
 					{
-						IsWin = false;
+						break;
 					}
+
+				} while (temp.Any());
+				if (temp.Any())
+				{
+					IsWin = false;
+				}
+				else
+				{
+					IsWin = true;
+					break;
 				}
 			}
 		}
@@ -236,9 +257,29 @@ namespace MahJongWorld.ChineseChess
 		}
 
 
+
+
+
 		public override void Discard()
 		{
-			// TODO
+			int keyint;
+			Console.Write($"Please select whitch one do you want to discard from index 1-{Hand.Count}:");
+			while (true)
+			{
+				string keystring = Console.ReadLine();
+				Console.WriteLine($"the select is: {keystring}");
+				bool err = int.TryParse(keystring,out keyint);
+				if (!err || keyint > Hand.Count || keyint < 1)
+				{
+					Console.Write("Wrong Enter Please Renter:");
+				}
+				else
+				{
+					break;
+				}
+			}
+			River.Add(Hand[keyint - 1]);
+			Hand.RemoveAt(keyint - 1);
 		}
 
 
@@ -247,35 +288,30 @@ namespace MahJongWorld.ChineseChess
 		/// </summary>
 		/// <param name="chess"> the previous one is discard to river </param>
 		/// <returns> true if the HasMeld contains any probably meld; otherwise, false.</returns>
-		public bool CheckMeld(Chess chess)
+		public void CheckMeld(Chess chess)
 		{
-			Task Task = Task.Factory.StartNew(()=>
+			Chess M2 = new(){Number = chess.Number-2,Color = chess.Color};
+			Chess M1 = new(){Number = chess.Number-1,Color = chess.Color};
+			Chess P1 = new(){Number = chess.Number+1,Color = chess.Color};
+			Chess P2 = new(){Number = chess.Number+2,Color = chess.Color};
+
+			// m2m1
+			if (CheckContains(Hand, M2) && CheckContains(Hand, M1))
 			{
-				Chess M2 = new(){Number = chess.Number-2,Color= chess.Color};
-				Chess M1 = new(){Number = chess.Number-1,Color= chess.Color};
-				Chess P1 = new(){Number = chess.Number+1, Color = chess.Color};
-				Chess P2 = new(){Number = chess.Number+2,Color= chess.Color};
+				HasMeld.Add((Hand[FindIndex(Hand, M2)], Hand[FindIndex(Hand, M1)]));
+			}
 
-				// m2m1
-				if (CheckContains(Hand, M2) && CheckContains(Hand, M1))
-				{
-					HasMeld.Add((M2, M1));
-				}
+			// m1p1
+			if (CheckContains(Hand, M1) && CheckContains(Hand, P1))
+			{
+				HasMeld.Add((Hand[FindIndex(Hand, M1)], Hand[FindIndex(Hand, P1)]));
+			}
 
-				// m1p1
-				if (CheckContains(Hand, M1) && CheckContains(Hand, P1))
-				{
-					HasMeld.Add((M1, P1));
-				}
-
-				// p1p2
-				if (!CheckContains(Hand, P1) && CheckContains(Hand, P2))
-				{
-					HasMeld.Add((P1, P2));
-				}
-
-			});
-			return HasMeld.Any();
+			// p1p2
+			if (!CheckContains(Hand, P1) && CheckContains(Hand, P2))
+			{
+				HasMeld.Add((Hand[FindIndex(Hand, P1)], Hand[FindIndex(Hand, P2)]));
+			}
 		}
 
 
@@ -286,25 +322,46 @@ namespace MahJongWorld.ChineseChess
 		/// <param name="previousPlayer">the previous player.</param>
 		public void MakeChiMeld(int choice, ref Player previousPlayer)
 		{
-			// Add List<Chess> to Meld List, it is include
-			// HasMeld[choice - 1].Item1,
-			// otherPlayer.River.Last and 
-			// HasMeld[choice - 1].Item2
+
+			int first = FindIndex(Hand,HasMeld[choice -1].Item1);
+			int second =FindIndex(Hand, HasMeld[choice - 1].Item2) ;
 			Meld.Add(new()
 			{
-				HasMeld[choice - 1].Item1,
+				Hand[first],
 				previousPlayer.River.Last(),
-				HasMeld[choice - 1].Item2
+				Hand[second],
 			});
 
 			// remove pair from Hand
-			Hand.Remove(HasMeld[choice - 1].Item1);
-			Hand.Remove(HasMeld[(choice - 1)].Item2);
+			Hand.RemoveAt(first);
+			Hand.RemoveAt(second);
 			// previousPlayer.River Remove Last one
 			previousPlayer.River.RemoveAt(previousPlayer.River.Count - 1);
 
 			// clear HasMeld
 			HasMeld = new();
 		}
+
+
+		/// <summary>
+		/// Rewrite FindIndex for Searches for target is matches the 
+		/// source list
+		/// </summary>
+		/// <param name="source"> list source</param>
+		/// <param name="target"> target element</param>
+		/// <returns>i is the position, Or -1 of not found</returns>
+		private static int FindIndex(List<Chess> source, Chess target)
+		{
+			for (int i = 0; i < source.Count; i++)
+			{
+				if (source[i].Number == target.Number && source[i].Color == target.Color)
+				{
+					return i;
+				}
+
+			}
+			return -1;
+		}
+
 	}
 }

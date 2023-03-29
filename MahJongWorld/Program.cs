@@ -1,4 +1,4 @@
-﻿using MahJongWorld.DiceMahJong;
+﻿using MahJongWorld.ChineseChessMahJong._32Tile;
 
 namespace MahJongWorld
 {

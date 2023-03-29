@@ -67,8 +67,7 @@ namespace MahJongWorld.Abstract
 		/// Player Discard From Hand To River
 		/// </summary>
 		/// <param name="player"></param>
-		/// <param name="gameState"></param>
-		protected abstract void Discard(ref T player, ref GameState gamestate);
+		protected abstract void Discard(ref T player);
 
 
 		/// <summary>

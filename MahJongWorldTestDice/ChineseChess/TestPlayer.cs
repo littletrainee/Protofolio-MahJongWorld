@@ -1,6 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace MahJongWorld.ChineseChess.TestChineseChess
+namespace MahJongWorld.ChineseChessMahJong.TestChineseChess
 {
 	[TestClass()]
 	public class TestPlayer
@@ -23,6 +23,57 @@ namespace MahJongWorld.ChineseChess.TestChineseChess
 				River= new()
 			};
 			p.PrintToConsole();
+		}
+
+		[TestMethod()]
+		public void TestFindProbablyEye()
+		{
+			Chess c1 = new(){Number =1,Color = "b",Surface="將"};
+			Chess c2 = new(){Number =1,Color = "r",Surface="帥"};
+			Chess c3 = new(){Number =2,Color = "b",Surface= "象"};
+			Chess c4 = new(){Number =3,Color = "b", Surface= "車"};
+			Chess c5 = new(){Number =4, Color = "b",Surface= "馬"};
+			List<Chess> li = new() { c1,c2,c3,c4,c5};
+			Player p = new();
+			p.FindProbablyEye(li);
+		}
+
+		[TestMethod()]
+		public void TestCheckMeld()
+		{
+
+			Chess c1 = new(){Number =1,Color = "b",Surface="將"};
+			Chess c2 = new(){Number =2,Color = "b",Surface="士"};
+			Chess c3 = new(){Number =3,Color = "b",Surface= "象"};
+			Chess c4 = new(){Number =4,Color = "b", Surface= "車"};
+
+			Chess T = new(){Number =5,Color= "b",Surface="馬"};
+			Player p  = new()
+			{
+				Hand = new(){ c1,c3,c4,T},
+				HasMeld = new()
+			};
+			p.CheckMeld(c2);
+		}
+
+		[TestMethod()]
+		public void TestRonCheck()
+		{
+			Chess c1 = new(){Number =2,Color = "b",Surface="士"};
+			Chess c2 = new(){Number =2,Color = "b",Surface="士"};
+			Chess c3 = new(){Number =3,Color = "b",Surface= "象"};
+			Chess c4 = new(){Number =3,Color = "b",Surface= "象"};
+
+			Chess T = new(){Number =5,Color= "b",Surface="馬"};
+			Player p  = new()
+			{
+				Name = "lo",
+				Hand = new(){ c1,c2,c3,c4},
+				Meld = new(),
+				HasMeld = new()
+			};
+			p.RonCheck(T);
+			Task.WaitAll();
 		}
 	}
 }

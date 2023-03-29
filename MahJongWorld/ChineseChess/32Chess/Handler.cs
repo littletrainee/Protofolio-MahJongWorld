@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using MahJongWorld.Abstract;
 using MahJongWorld.Shared;
 
-namespace MahJongWorld.ChineseChess
+namespace MahJongWorld.ChineseChessMahJong
 {
 	namespace _32Tile
 	{
@@ -33,6 +33,7 @@ namespace MahJongWorld.ChineseChess
 				// set delegate to handle "clear console", wall and Each Player,
 				// print to console
 				Print = new PrintToConsole(Console.Clear);
+				Print += GameState.PrintToConsole;
 				Print += Wall.PrintToConsole;
 				AddPrintToDelegate();
 			}
@@ -60,9 +61,9 @@ namespace MahJongWorld.ChineseChess
 				GameState = new();
 				GameState.Initialization(key);
 				Players = new();
-				foreach (int _ in Enumerable.Range(0, GameState.MaxPlayer))
+				foreach (int i in Enumerable.Range(0, GameState.MaxPlayer))
 				{
-					Players.Add(new());
+					Players.Add(new() { Code = i });
 				}
 				Wall = new();
 			}
@@ -74,6 +75,7 @@ namespace MahJongWorld.ChineseChess
 				// Set Player Name
 				for (int i = 0; i < Players.Count; i++)
 				{
+
 					Console.Write($"Please Enter {Enum.GetName(typeof(Ordinal), i + 1)} Player Name:");
 					while (true)
 					{
@@ -88,6 +90,10 @@ namespace MahJongWorld.ChineseChess
 						}
 					}
 					Players[i].Initialization(keyin);
+					if (i == 0)
+					{
+						GameState.SetFirstPlayerName(Players[i].Name);
+					}
 				}
 				Wall.Name = "Wall";
 			}
@@ -141,95 +147,106 @@ namespace MahJongWorld.ChineseChess
 			public override void Update()
 			{
 				// declare current state
-				State state = State.Draw;
+				int choice = 0;
+				int previousPlayerCode = 0;
+				int nextPlayerCode = 0;
+				State state = State.CheckTsumo;
+				Player tempPlayer ;
+
 				while (GameState.GameOn)
 				{
 					// print to console
 					Print();
-					ResetOrder();
-
-					// check Order[0] is Tsumo
-					Order[0].TsumoCheck();
-					if (Order[0].IsWin)
+					switch (state)
 					{
-						state = State.Tsumo;
-						GameState.GameOn = false;
-						continue;
-					}
-
-					// if not tsumo then discard
-					GameState.NextRound(Players[0].Name);
-					Player tempPlayer = Order[0];
-					GameState tempGameState = GameState;
-					Discard(ref tempPlayer, ref tempGameState);
-					Print();
-
-					// each player check is ron or not
-					List<Player> tempOrder = Order;
-					CheckRon(tempOrder);
-					(Player,Player) pair = WhoRon(tempOrder);
-					if (pair.Item1 != null)
-					{
-						//TODO pair.item1 is winner
-						state = State.Ron;
-						GameState.GameOn = false;
-						continue;
-					}
-
-					// check has meld
-					(Ordinal,Ordinal) whichOneAndLast =CheckMeld() ;
-					// if whichOneAndLast.Item1 != None meaning is Hasmeld
-					if (whichOneAndLast.Item1 != Ordinal.None)
-					{
-						int choice = whichOneAndLast.Item1 switch
+						case State.CheckTsumo:
 						{
-							Ordinal.First =>AskMakeMeldAndChoose(Players[0]),
-							Ordinal.Second => AskMakeMeldAndChoose(Players[1]),
-							Ordinal.Third => AskMakeMeldAndChoose(Players[2]),
-							Ordinal.Fourth => AskMakeMeldAndChoose(Players[3]),
-							_ => throw new NotImplementedException(),
-						};
-						// if choice != 0
-						if (choice != 0)
-						{
-							tempPlayer = Players[(int)whichOneAndLast.Item2];
-							switch (whichOneAndLast.Item1)
+							ResetOrder();
+							// check Order[0] is Tsumo
+							Order[0].TsumoCheck();
+							if (Order[0].IsWin)
 							{
-								case Ordinal.First:
-									Players[0].MakeChiMeld(choice, ref tempPlayer);
-									GameState.GameTurn = 0;
-									break;
-								case Ordinal.Second:
-									Players[1].MakeChiMeld(choice, ref tempPlayer);
-									GameState.GameTurn = 1;
-									break;
-								case Ordinal.Third:
-									Players[2].MakeChiMeld(choice, ref tempPlayer);
-									GameState.GameTurn = 2;
-									break;
-								case Ordinal.Fourth:
-									Players[3].MakeChiMeld(choice, ref tempPlayer);
-									GameState.GameTurn = 3;
-									break;
+								state = State.IsTsumo;
+								GameState.GameOn = false;
+								break;
 							}
-							goto NextPlayer;
+							// if not tsumo then discard
+							state = State.Discard;
+							GameState.NextRound(Order[0].Name);
+							break;
+						}
+						case State.Discard:
+						{
+							tempPlayer = Order[0];
+							//tempGameState = GameState;
+							Discard(ref tempPlayer);
+							state = State.CheckRon;
+							break;
+						}
+						case State.CheckRon:
+						{
+							// each player check is ron or not
+							List<Player> tempOrder = Order;
+							CheckRon(tempOrder);
+							(Player,Player) pair = WhoRon(tempOrder);
+							if (pair.Item1 != null)
+							{
+								//TODO pair.item1 is winner
+								state = State.IsRon;
+								GameState.GameOn = false;
+								continue;
+							}
+							state = State.CheckMeld;
+							break;
+
+						}
+						case State.CheckMeld:
+						{
+							previousPlayerCode = Order[0].Code;
+							// set nextPlayer code
+							if (previousPlayerCode + 1 == GameState.MaxPlayer)
+							{
+								nextPlayerCode = 0;
+							}
+							else
+							{
+								nextPlayerCode = previousPlayerCode + 1;
+							}
+
+							Players[nextPlayerCode].CheckMeld(Players[previousPlayerCode].River.Last());
+							if (Players[nextPlayerCode].HasMeld.Any())
+							{
+								choice = AskMakeMeldAndChoose(Players[nextPlayerCode]);
+								// player is select
+								if (choice != 0)
+								{
+									state = State.MakeMeld;
+									break;
+								}
+							}
+							// player no select
+							state = State.DrawFromWall;
+							break;
+						}
+						case State.MakeMeld:
+						{
+							tempPlayer = Players[previousPlayerCode];
+							Players[nextPlayerCode].MakeChiMeld(choice, ref tempPlayer);
+							GameState.TurnNext();
+							state = State.Discard;
+							ResetOrder();
+							break;
+						}
+						case State.DrawFromWall:
+						{
+							Wall tempWall = Wall;
+							Players[nextPlayerCode].Draw(ref tempWall);
+							GameState.TurnNext();
+							ResetOrder();
+							state = State.CheckTsumo;
+							break;
 						}
 					}
-				// whichOneAndLast.Item1 == None
-				NextPlayer:
-					GameState.TurnNext();
-				}
-
-
-				// whitch state
-				switch (state)
-				{
-					case State.Tsumo:
-						break;
-					case State.Ron:
-						break;
-					default:
-						break;
 				}
 			}
 
@@ -247,10 +264,8 @@ namespace MahJongWorld.ChineseChess
 			}
 
 
-			protected override void Discard(ref Player player, ref GameState gameState)
+			protected override void Discard(ref Player player)
 			{
-				// Turn to Next Round
-				gameState.NextRound(player.Name);
 
 				// Discard
 				player.Discard();
@@ -284,111 +299,7 @@ namespace MahJongWorld.ChineseChess
 			}
 
 
-			/// <summary>
-			/// Accroding to the number of playrs to choose to judge the meld ,
-			/// of current player. Prompt In 32-Chess only Chi can meld.
-			/// </summary>
-			/// <returns>which player has meld, or <see cref="Ordinal.None"/> 
-			/// if no one has it.</returns>
-			private (Ordinal, Ordinal) CheckMeld()
-			{
-				// how many player in this game
-				switch (Order.Count)
-				{
-					// if 2 player
-					case 2:
-						if (Order[0].Name == Players[0].Name) // Order[0] == Players[0]
-						{
-							if (Players[1].CheckMeld(Players[0].River.Last()))
-							{
-								return (Ordinal.Second, Ordinal.First);
-							}
-						}
-
-
-						else if (Order[0].Name == Players[1].Name) // Order[0] == Players[1]
-						{
-							if (Players[0].CheckMeld(Players[1].River.Last()))
-							{
-								return (Ordinal.First, Ordinal.Second);
-							}
-						}
-						break;
-
-					// if 3 player
-					case 3:
-
-						if (Order[0].Name == Players[0].Name) // Order[0] == Players[0]
-						{
-							if (Players[1].CheckMeld(Players[0].River.Last()))
-							{
-								return (Ordinal.Second, Ordinal.First);
-							}
-						}
-
-
-						else if (Order[0].Name == Players[1].Name) // Order[0] == Players[1]
-						{
-							if (Players[2].CheckMeld(Players[1].River.Last()))
-							{
-								return (Ordinal.Third, Ordinal.Second);
-							}
-						}
-
-
-						else if (Order[0].Name == Players[2].Name) // Order[0] == Players[2]
-						{
-							if (Players[0].CheckMeld(Players[2].River.Last()))
-							{
-								return (Ordinal.First, Ordinal.Third);
-							}
-						}
-						break;
-
-					// if 4 player 
-					case 4:
-
-						if (Order[0].Name == Players[0].Name) // Order[0] == Players[0]
-						{
-							if (Players[1].CheckMeld(Players[0].River.Last()))
-							{
-								return (Ordinal.Second, Ordinal.First);
-							}
-						}
-
-
-						else if (Order[0].Name == Players[1].Name) // Order[0] == Playes[1]
-						{
-							if (Players[2].CheckMeld(Players[1].River.Last()))
-							{
-								return (Ordinal.Third, Ordinal.Second);
-							}
-						}
-
-
-						else if (Order[0].Name == Players[2].Name) // Order[0] == Players[2]
-						{
-							if (Players[3].CheckMeld(Players[2].River.Last()))
-							{
-								return (Ordinal.Fourth, Ordinal.Third);
-							}
-						}
-
-
-						else if (Order[0].Name == Players[3].Name) // Order[0] == Players[3]
-						{
-							if (Players[0].CheckMeld(Players[3].River.Last()))
-							{
-								return (Ordinal.First, Ordinal.Fourth);
-							}
-						}
-						break;
-				}
-				return (Ordinal.None, Ordinal.None);
-			}
-
-
-			private int AskMakeMeldAndChoose(Player player)
+			private static int AskMakeMeldAndChoose(Player player)
 			{
 				Console.Write("Want to Make Meld?(y/n)");
 				string key;
