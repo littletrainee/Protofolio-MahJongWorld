@@ -18,12 +18,6 @@ namespace MahJongWorld.Abstract
 
 
 		/// <summary>
-		/// Append Chess To Wall
-		/// </summary>
-		public abstract void AppendToHand();
-
-
-		/// <summary>
 		/// Shuffle Wall
 		/// </summary>
 		public void Shuffle()

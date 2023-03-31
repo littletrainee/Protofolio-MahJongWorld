@@ -15,38 +15,6 @@ namespace MahJongWorld.Abstract
 
 
 		/// <summary>
-		/// Print Hand and River to Console
-		/// </summary>
-		public abstract void PrintToConsole();
-
-
-		/// <summary>
-		/// Sort self Hand
-		/// </summary>
-		public abstract void SortHand();
-
-		/// <summary>
-		/// Check is Tsumo 
-		/// </summary>
-		public abstract void TsumoCheck();
-
-
-		/// <summary>
-		/// Check is Ron by <paramref name="target"/>
-		/// </summary>
-		/// <param name="target"><typeparamref name="T"/></param>
-		public abstract void RonCheck(T target);
-
-
-		/// <summary>
-		/// Find Probably Eye is in hand list
-		/// </summary>
-		/// <param name="source"> The Source of hand</param>
-		/// <returns> return a List of Probably Eye.</returns>
-		public abstract List<T> FindProbablyEye(List<T> source);
-
-
-		/// <summary>
 		///	Determines <paramref name="target"/> is in the <paramref name="targetlist"/> 
 		/// </summary>
 		/// <param name="targetlist">target confirmed list</param>
@@ -73,9 +41,5 @@ namespace MahJongWorld.Abstract
 		/// <returns></returns>
 		protected abstract void RemoveEye(T targetEye, ref List<T> orginal);
 
-		/// <summary>
-		/// ManualDiscard from Hand to River
-		/// </summary>
-		public abstract void ManualDiscard();
 	}
 }

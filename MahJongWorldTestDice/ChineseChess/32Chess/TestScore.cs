@@ -3,7 +3,7 @@ using MahJongWorld.Shared;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace MahJongWorld.ChineseChess._32Chess.TestChineseChess
+namespace MahJongWorld.ChineseChessMahJong._32Chess.TestChineseChess
 {
 	[TestClass()]
 	public class TestScore

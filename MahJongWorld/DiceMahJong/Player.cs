@@ -34,7 +34,7 @@ namespace MahJongWorld.DiceMahJong
 		/// <summary>
 		/// Print Hand and River to Console
 		/// </summary>
-		public override void PrintToConsole()
+		public void PrintToConsole()
 		{
 			Console.Write($"{Name}'s Hand: ");
 			foreach (Dice d in Hand)
@@ -79,7 +79,7 @@ namespace MahJongWorld.DiceMahJong
 		}
 
 
-		public override void SortHand()
+		public void SortHand()
 		{
 			List<Dice> newtemp = new();
 			for (int i = 1; i < 7; i++)
@@ -96,7 +96,7 @@ namespace MahJongWorld.DiceMahJong
 		}
 
 
-		public override void TsumoCheck()
+		public void TsumoCheck()
 		{
 			// Clone player
 			Player tempPlayer = new(){Hand = Hand.ToList() };
@@ -106,7 +106,7 @@ namespace MahJongWorld.DiceMahJong
 		}
 
 
-		public override void RonCheck(Dice target)
+		public void RonCheck(Dice target)
 		{
 			Task Task = Task.Factory.StartNew(()=>
 			{
@@ -118,7 +118,7 @@ namespace MahJongWorld.DiceMahJong
 		}
 
 
-		public override List<Dice> FindProbablyEye(List<Dice> source)
+		public List<Dice> FindProbablyEye(List<Dice> source)
 		{
 			List<Dice> result = new();
 			for (int i = 0; i < source.Count; i++)
@@ -175,7 +175,7 @@ namespace MahJongWorld.DiceMahJong
 		}
 
 
-		public override void ManualDiscard()
+		public void ManualDiscard()
 		{
 			int keyint;
 			bool ok;

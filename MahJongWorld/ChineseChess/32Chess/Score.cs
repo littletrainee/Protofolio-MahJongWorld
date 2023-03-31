@@ -1,10 +1,9 @@
 ﻿using System;
 
 using MahJongWorld.Abstract;
-using MahJongWorld.ChineseChessMahJong;
 using MahJongWorld.Shared;
 
-namespace MahJongWorld.ChineseChess._32Chess
+namespace MahJongWorld.ChineseChessMahJong._32Chess
 {
 	public class Score : AbstractScore<Chess>
 	{
