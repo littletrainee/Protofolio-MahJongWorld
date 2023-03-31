@@ -76,6 +76,6 @@ namespace MahJongWorld.Abstract
 		/// <summary>
 		/// ManualDiscard from Hand to River
 		/// </summary>
-		public abstract void Discard();
+		public abstract void ManualDiscard();
 	}
 }

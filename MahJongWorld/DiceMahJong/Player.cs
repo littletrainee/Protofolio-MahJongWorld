@@ -175,7 +175,7 @@ namespace MahJongWorld.DiceMahJong
 		}
 
 
-		public override void Discard()
+		public override void ManualDiscard()
 		{
 			int keyint;
 			bool ok;

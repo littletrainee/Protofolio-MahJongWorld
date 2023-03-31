@@ -259,7 +259,7 @@ namespace MahJongWorld.ChineseChessMahJong
 		}
 
 
-		public override void Discard()
+		public override void ManualDiscard()
 		{
 			int keyint;
 			Console.Write($"Please select whitch one do you want to discard from index 1-{Hand.Count}:");
@@ -279,6 +279,12 @@ namespace MahJongWorld.ChineseChessMahJong
 			}
 			River.Add(Hand[keyint - 1]);
 			Hand.RemoveAt(keyint - 1);
+		}
+
+		public void AutoDiscard()
+		{
+			River.Add(Hand[Hand.Count - 1]);
+			Hand.RemoveAt(Hand.Count - 1);
 		}
 
 
@@ -375,7 +381,7 @@ namespace MahJongWorld.ChineseChessMahJong
 		}
 
 
-		public List<Chess> TenPaiCheck()
+		public bool TenPaiCheck()
 		{
 			Chess probablyChess;
 			List<Chess> temphand = Hand.ToList();
@@ -392,12 +398,12 @@ namespace MahJongWorld.ChineseChessMahJong
 				cloneForPopOne.RemoveAt(i);
 				foreach (string c in color)
 				{
-					for (int j = 0; j < 8; j++)
+					for (int j = 1; j < 8; j++)
 					{
 						removeOneFromClone = cloneForPopOne.ToList();
 						probablyChess = new() { Number = j, Color = c };
-						cloneForPopOne.Add(probablyChess);
-						if (ProbablyWin(cloneForPopOne))
+						removeOneFromClone.Add(probablyChess);
+						if (ProbablyWin(removeOneFromClone))
 						{
 							if (!CheckContains(probablywinTile, probablyChess))
 							{
@@ -407,13 +413,13 @@ namespace MahJongWorld.ChineseChessMahJong
 					}
 				}
 			}
-			return probablywinTile;
+			return probablywinTile.Any();
 		}
 
 
 		private static bool ProbablyWin(List<Chess> source)
 		{
-			Player p = new(){Hand = source};
+			Player p = new(){Hand = source,Meld = new()};
 			p.SortHand();
 			p.TsumoCheck();
 			return p.IsWin;

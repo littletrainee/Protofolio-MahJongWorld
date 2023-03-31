@@ -6,6 +6,8 @@
 		CheckTsumo,
 		IsTsumo,
 		AskDeclareTenPai,
+		CheckTenPai,
+		IsTenPai,
 		ManualDiscard,
 		AutoDiscard,
 		CheckRon,

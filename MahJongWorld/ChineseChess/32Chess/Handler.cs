@@ -160,6 +160,7 @@ namespace MahJongWorld.ChineseChessMahJong
 					Print();
 					switch (State)
 					{
+						#region CheckTsumo:
 						case State.CheckTsumo:
 						{
 							ResetOrder();
@@ -175,9 +176,39 @@ namespace MahJongWorld.ChineseChessMahJong
 							}
 							// if not tsumo then discard
 							GameState.NextRound(Order[0].Name);
-							State = State.AskDeclareTenPai;
+							State = State.IsTenPai;
 							break;
 						}
+						#endregion
+
+						#region IsTenPai
+						case State.IsTenPai:
+						{
+							if (Order[0].TenPai)
+							{
+								State = State.AutoDiscard;
+								break;
+							}
+							State = State.CheckTenPai;
+							break;
+
+						}
+						#endregion
+
+						#region CheckTenPai
+						case State.CheckTenPai:
+						{
+							if (Order[0].TenPaiCheck())
+							{
+								State = State.AskDeclareTenPai;
+								break;
+							}
+							State = State.ManualDiscard;
+							break;
+						}
+						#endregion
+
+						#region AskDeclareTenPai
 						case State.AskDeclareTenPai:
 						{
 							tempPlayer = Order[0];
@@ -185,16 +216,29 @@ namespace MahJongWorld.ChineseChessMahJong
 							State = State.ManualDiscard;
 							break;
 						}
+						#endregion
+
+						#region ManualDiscard
 						case State.ManualDiscard:
 						{
 							tempPlayer = Order[0];
-							Discard(ref tempPlayer);
+							ManualDiscard(ref tempPlayer);
 							State = State.CheckRon;
 							break;
 						}
+						#endregion
+
+						#region AutoDiscard
 						case State.AutoDiscard:
-							// TODO
+						{
+							tempPlayer = Order[0];
+							AutoDiscard(ref tempPlayer);
+							State = State.CheckRon;
 							break;
+						}
+						#endregion
+
+						#region CheckRon
 						case State.CheckRon:
 						{
 							// each player check is ron or not
@@ -209,9 +253,13 @@ namespace MahJongWorld.ChineseChessMahJong
 								Console.ReadLine();
 								continue;
 							}
+
 							State = State.CheckMeld;
 							break;
 						}
+						#endregion
+
+						#region CheckMeld
 						case State.CheckMeld:
 						{
 							previousPlayerCode = Order[0].Code;
@@ -224,31 +272,40 @@ namespace MahJongWorld.ChineseChessMahJong
 							{
 								nextPlayerCode = previousPlayerCode + 1;
 							}
-
-							Players[nextPlayerCode].CheckMeld(Players[previousPlayerCode].River.Last());
-							if (Players[nextPlayerCode].HasMeld.Any())
+							// if next player not tenpai
+							if (!Players[nextPlayerCode].TenPai)
 							{
-								choice = AskMakeMeldAndChoose(Players[nextPlayerCode]);
-								// player is select
-								if (choice != 0)
+								Players[nextPlayerCode].CheckMeld(Players[previousPlayerCode].River.Last());
+								if (Players[nextPlayerCode].HasMeld.Any())
 								{
-									State = State.MakeMeld;
-									break;
+									choice = AskMakeMeldAndChoose(Players[nextPlayerCode]);
+									// player is select
+									if (choice != 0)
+									{
+										State = State.MakeMeld;
+										break;
+									}
 								}
 							}
-							// player no select
+							// player no select or player is tenpai
 							State = State.DrawFromWall;
 							break;
 						}
+						#endregion
+
+						#region MakeMeld
 						case State.MakeMeld:
 						{
 							tempPlayer = Players[previousPlayerCode];
 							Players[nextPlayerCode].MakeChiMeld(choice, ref tempPlayer);
 							GameState.TurnNext();
-							State = State.ManualDiscard;
+							State = State.CheckTenPai;
 							ResetOrder();
 							break;
 						}
+						#endregion
+
+						#region DrawFromWall
 						case State.DrawFromWall:
 						{
 							Wall tempWall = Wall;
@@ -258,6 +315,8 @@ namespace MahJongWorld.ChineseChessMahJong
 							State = State.CheckTsumo;
 							break;
 						}
+						#endregion
+
 					}
 				}
 			}
@@ -276,11 +335,22 @@ namespace MahJongWorld.ChineseChessMahJong
 			}
 
 
-			protected override void Discard(ref Player player)
+			protected override void ManualDiscard(ref Player player)
 			{
 
 				// ManualDiscard
-				player.Discard();
+				player.ManualDiscard();
+
+				// SortHand
+				player.SortHand();
+			}
+
+
+
+			private static void AutoDiscard(ref Player player)
+			{
+				// AutoDiscard
+				player.AutoDiscard();
 
 				// SortHand
 				player.SortHand();
@@ -401,7 +471,7 @@ namespace MahJongWorld.ChineseChessMahJong
 			}
 
 
-			public void DeclareTenPai(ref Player player)
+			public static void DeclareTenPai(ref Player player)
 			{
 				string key;
 				Console.Write("Do You Want Declare TenPai?(y/n)");
@@ -421,6 +491,7 @@ namespace MahJongWorld.ChineseChessMahJong
 				if (key == "y")
 				{
 					player.TenPai = true;
+
 				}
 			}
 		}
