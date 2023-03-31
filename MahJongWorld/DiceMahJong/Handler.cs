@@ -152,8 +152,7 @@ namespace MahJongWorld.DiceMahJong
 				Print();
 
 				// if not tsumo then discard
-				Player tempPlayer = Order[0];
-				ManualDiscard(ref tempPlayer);
+				ManualDiscard();
 				Print();
 
 				// each playercheck is ron or not
@@ -236,14 +235,14 @@ namespace MahJongWorld.DiceMahJong
 		}
 
 
-		protected override void ManualDiscard(ref Player player)
+		protected override void ManualDiscard()
 		{
-
+			Player tempPlayer = Order[0];
 			// ManualDiscard
-			player.ManualDiscard();
+			tempPlayer.ManualDiscard();
 
 			// SortHand
-			player.SortHand();
+			tempPlayer.SortHand();
 		}
 
 

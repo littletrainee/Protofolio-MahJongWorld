@@ -10,6 +10,8 @@ namespace MahJongWorld.Shared
 		public int MaxPlayer { get; set; }
 		public int GameRound { get; set; }
 
+		public bool LastOne { get; set; }
+
 
 
 		/// <summary>

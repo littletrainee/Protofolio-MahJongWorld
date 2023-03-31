@@ -66,8 +66,7 @@ namespace MahJongWorld.Abstract
 		/// <summary>
 		/// Player ManualDiscard From Hand To River
 		/// </summary>
-		/// <param name="player"></param>
-		protected abstract void ManualDiscard(ref T player);
+		protected abstract void ManualDiscard();
 
 
 		/// <summary>
