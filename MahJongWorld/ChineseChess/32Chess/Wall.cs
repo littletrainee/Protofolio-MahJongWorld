@@ -6,9 +6,6 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 {
 	public class Wall : ChineseChessMahJong.Wall, IWall
 	{
-		/// <summary>
-		/// combine code and surface to Chess class and append it to wall list
-		/// </summary>
 		public void AppendToHand()
 		{
 			Hand = new();

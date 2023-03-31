@@ -1,6 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace MahJongWorld.ChineseChessMahJong._32Chess.TestChineseChess
+namespace MahJongWorld.ChineseChessMahJong._56Chess.TestChineseChess
 {
 	[TestClass()]
 	public class TestHandler

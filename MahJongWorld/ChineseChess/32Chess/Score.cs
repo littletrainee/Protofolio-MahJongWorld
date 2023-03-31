@@ -7,6 +7,12 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 {
 	public class Score : AbstractScore<Chess>
 	{
+		/// <summary>
+		/// initilization this Player, GameState and State 
+		/// </summary>
+		/// <param name="player"></param>
+		/// <param name="gameState"></param>
+		/// <param name="state"></param>
 		public void Initilization(Player player, GameState gameState, State state)
 		{
 			Hand = player.Hand;
@@ -15,6 +21,9 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		}
 
 
+		/// <summary>
+		/// 天胡
+		/// </summary>
 		private void TenHou()
 		{
 			if (GameState.GameRound == 0 && GameState.GameTurn == 0)
@@ -25,17 +34,30 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		}
 
 
+		/// <summary>
+		/// 五兵合縱、五卒連橫 
+		/// </summary>
 		private void FiveSolider()
 		{
-			if (Five(new() { Number = 7, Color = "b" }) ||
-				Five(new() { Number = 7, Color = "r" }))
+			if (Five(new() { Number = 7, Color = "b" }))
 			{
 				Total += 5;
 				Console.WriteLine("五卒連橫    5台");
 			}
+			if (Five(new() { Number = 7, Color = "r" }))
+			{
+
+				Total += 5;
+				Console.WriteLine("五兵合縱    5台");
+			}
 		}
 
 
+		/// <summary>
+		/// check hand is all equal to compare
+		/// </summary>
+		/// <param name="compare"> compare by <paramref name="compare"/></param>
+		/// <returns>true is all same;or false</returns>
 		private bool Five(Chess compare)
 		{
 			foreach (Chess chess in Hand)
@@ -49,6 +71,9 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		}
 
 
+		/// <summary>
+		/// 將帥聽令
+		/// </summary>
 		public void DifferentGeneralBeenPair()
 		{
 			if (CheckContains(new() { Number = 1, Color = "b" }) && CheckContains(new() { Number = 1, Color = "r" }))
@@ -59,11 +84,12 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 
 		}
 
-		public int GetTotal()
-		{
-			return Total;
-		}
 
+		/// <summary>
+		/// check hand is contain <paramref name="compare"/>
+		/// </summary>
+		/// <param name="compare"></param>
+		/// <returns>true is contains <paramref name="compare"/>;or false</returns>
 		private bool CheckContains(Chess compare)
 		{
 			foreach (Chess chess in Hand)
@@ -77,6 +103,9 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		}
 
 
+		/// <summary>
+		/// Tsumo Or Ron this game
+		/// </summary>
 		private void TsumoOrRon()
 		{
 			if (WinBy == State.IsTsumo)
@@ -92,6 +121,9 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		}
 
 
+		/// <summary>
+		/// All color is Same
+		/// </summary>
 		private void SameColor()
 		{
 			if (Color("b") || Color("r"))
@@ -102,6 +134,11 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		}
 
 
+		/// <summary>
+		///  check all color is same 
+		/// </summary>
+		/// <param name="target"></param>
+		/// <returns>true is all same color; ortherwise false</returns>
 		private bool Color(string target)
 		{
 			foreach (Chess chess in Hand)
@@ -115,6 +152,9 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		}
 
 
+		/// <summary>
+		/// check is win on the last one from wall
+		/// </summary>
 		private void WinOnLastOne()
 		{
 			if (GameState.LastOne)
@@ -125,6 +165,9 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		}
 
 
+		/// <summary>
+		/// print patterns to console
+		/// </summary>
 		public void PrintPatterns()
 		{
 			TenHou();

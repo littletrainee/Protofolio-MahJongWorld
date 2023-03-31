@@ -1,3 +1,4 @@
-# ¦¹±M®×¬O°w¹ïÀ³¼xªº§@«~³]­p¡A¤À¬°´X­Ó³¡¤À
-1. [»ë¤l³Â±N(Dice MahJong)](DiceMahJong.md)
-2. [¶H´Ñ³Â±N(Chinese Chess MahJong)](ChineseChessMahJong.md)
+# æ­¤å°ˆæ¡ˆæ˜¯é‡å°æ‡‰å¾µçš„ä½œå“è¨­è¨ˆï¼Œåˆ†ç‚ºå¹¾å€‹éƒ¨åˆ†
+
+1. [éª°å­éº»å°‡(Dice MahJong)](DiceMahJong.md)
+2. [è±¡æ£‹éº»å°‡(Chinese Chess MahJong)](ChineseChessMahJong.md)

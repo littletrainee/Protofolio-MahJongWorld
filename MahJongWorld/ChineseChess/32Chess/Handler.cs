@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,7 +12,7 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 	public class Handler : AbstractHandler<Player>
 	{
 		// Property
-		public ChineseChessMahJong._32Chess.Wall Wall { get; set; }
+		public Wall Wall { get; set; }
 
 		private State State { get; set; }
 
@@ -113,7 +114,7 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 
 		protected override void Draw()
 		{
-			ChineseChessMahJong.Wall tempwall = Wall;
+			List<Chess> tempwall = Wall.Hand;
 			foreach (var i in Enumerable.Range(0, 2))
 			{
 				foreach (Player player in Players)
@@ -184,15 +185,9 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 						break;
 					#endregion
 
-					#region ManualDiscard
-					case State.ManualDiscard:
-						ManualDiscard();
-						break;
-					#endregion
-
-					#region AutoDiscard
-					case State.AutoDiscard:
-						AutoDiscard();
+					#region Discard
+					case State.Discard:
+						Discard();
 						break;
 					#endregion
 
@@ -273,17 +268,12 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		/// </summary>
 		private void CheckTenPai()
 		{
-			if (Order[0].TenPai)
-			{
-				State = State.AutoDiscard;
-				return;
-			}
 			if (Order[0].TenPaiCheck())
 			{
 				State = State.AskDeclareTenPai;
 				return;
 			}
-			State = State.ManualDiscard;
+			State = State.Discard;
 		}
 
 
@@ -294,33 +284,18 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		{
 			Player tempPlayer = Order[0];
 			DeclareTenPai(ref tempPlayer);
-			State = State.ManualDiscard;
+			State = State.Discard;
 		}
 
 
 		/// <summary>
-		/// Order[0] Manual Discard And Sort 
+		/// Order[0] Manual Or Auto Discard And Sort 
 		/// </summary>
-		protected override void ManualDiscard()
+		protected override void Discard()
 		{
 			Player tempPlayer = Order[0];
-			// ManualDiscard
-			tempPlayer.ManualDiscard();
-
-			// SortHand
-			tempPlayer.SortHand();
-			State = State.CheckRon;
-		}
-
-
-		/// <summary>
-		/// Order[0] Auto Discard AndSort
-		/// </summary>
-		private void AutoDiscard()
-		{
-			Player tempPlayer = Order[0];
-			// AutoDiscard
-			tempPlayer.AutoDiscard();
+			// Discard
+			tempPlayer.Discard();
 
 			// SortHand
 			tempPlayer.SortHand();
@@ -548,7 +523,7 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		/// <param name="nextPlayerCode"> the latter one who was after Order[0]</param>
 		private void DrowFromWall(ref int nextPlayerCode)
 		{
-			ChineseChessMahJong.Wall tempWall = Wall;
+			List<Chess> tempWall = Wall.Hand;
 			GameState.LastOne = Wall.Hand.Count == 1;
 			Players[nextPlayerCode].Draw(ref tempWall);
 			GameState.TurnNext();

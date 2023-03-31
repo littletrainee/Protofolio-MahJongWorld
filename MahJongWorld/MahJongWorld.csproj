@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <Folder Include="FlowChart\" />
+    <Folder Include="Interface\" />
   </ItemGroup>
 
 </Project>

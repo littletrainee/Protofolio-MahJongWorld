@@ -3,7 +3,7 @@
 	public interface IWall
 	{
 		/// <summary>
-		/// Append Chess To Wall
+		/// combine code and surface to Chess class and append it to wall list
 		/// </summary>
 		public void AppendToHand();
 	}

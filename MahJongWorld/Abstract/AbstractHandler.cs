@@ -32,7 +32,7 @@ namespace MahJongWorld.Abstract
 		/// </summary>
 		protected abstract void SetPlayerName();
 
-		//<typeparamref name="T"/>.
+		//<typeparamref name="C"/>.
 		/// <summary>
 		/// Each Player Draw.
 		/// </summary>
@@ -64,16 +64,16 @@ namespace MahJongWorld.Abstract
 
 
 		/// <summary>
-		/// Player ManualDiscard From Hand To River
+		/// Player Discard From Hand To River
 		/// </summary>
-		protected abstract void ManualDiscard();
+		protected abstract void Discard();
 
 
 		/// <summary>
 		/// Each Player Check Ron At Different Thread
 		/// </summary>
 		/// <param name="order">player list</param>
-		//public abstract void CheckRon(List<T> order);
+		//public abstract void CheckRon(List<C> order);
 		public abstract void CheckRon();
 
 	}

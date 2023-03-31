@@ -1,24 +1,217 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+
+using MahJongWorld.Abstract;
 
 namespace MahJongWorld.ChineseChessMahJong._32Chess
 {
-	public class Player : ChineseChessMahJong.Player
+	public class Player : AbstractPlayer<Chess>
 	{
+		public List<List<Chess>> Meld { get; set; }
+		public List<Chess> River { get; set; }
 		public int Code { get; set; }
-		public List<(Chess, Chess)> HasMeld { get; set; }
 		public bool TenPai { get; set; }
+		public List<(Chess, Chess)> HasMeld { get; set; }
 
 
 
 
-		public void Initialization(string s)
+
+		public override void Initialization(string s)
 		{
 			Name = s;
 			Hand = new();
 			Meld = new();
 			River = new();
 			HasMeld = new();
+		}
+
+
+		public override void SortHand()
+		{
+			string[] color = new string[]{ "b","r"};
+			List<Chess> temphand = new();
+			foreach (string s in color)
+			{
+				foreach (int n in Enumerable.Range(0, 8))
+				{
+					foreach (Chess c in Hand)
+					{
+						if (c.Number == n && c.Color == s)
+						{
+							temphand.Add(c);
+						}
+					}
+				}
+			}
+			Hand = temphand;
+		}
+
+
+		public override void PrintToConsole()
+		{
+			Console.Write($"{Name}'s Hand: ");
+			foreach (Chess c in Hand)
+			{
+				if (c.Color == "r")
+				{
+					Console.ForegroundColor = ConsoleColor.Red;
+					Console.Write(c.Surface);
+					Console.ResetColor();
+				}
+				else
+				{
+					Console.Write(c.Surface);
+				}
+				if (c != Hand.Last())
+				{
+					Console.Write(", ");
+				}
+				if (c == Hand.Last())
+				{
+					Console.WriteLine();
+				}
+			}
+			Console.Write($"{Name}'s Meld: [ ");
+			foreach (List<Chess> meld in Meld)
+			{
+				foreach (Chess c in meld)
+				{
+					if (c == meld.First())
+					{
+						Console.Write("[ ");
+					}
+					if (c != meld.First())
+					{
+						Console.Write(", ");
+					}
+					if (c.Color == "r")
+					{
+						Console.ForegroundColor = ConsoleColor.Red;
+						Console.Write(c.Surface);
+						Console.ResetColor();
+					}
+					else
+					{
+						Console.Write(c.Surface);
+					}
+				}
+				if (meld != Meld.Last())
+				{
+					Console.Write(", ");
+				}
+				if (meld == Meld.Last())
+				{
+					Console.Write(" ]");
+
+				}
+			}
+			Console.WriteLine(" ]");
+			Console.Write($"{Name}'s River: ");
+			foreach (Chess c in River)
+			{
+				if (c.Color == "r")
+				{
+					Console.ForegroundColor = ConsoleColor.Red;
+					Console.Write(c.Surface);
+					Console.ResetColor();
+				}
+				else
+				{
+					Console.Write(c.Surface);
+				}
+				if (c != River.Last())
+				{
+					Console.Write(", ");
+				}
+				if (c == River.Last())
+				{
+					Console.WriteLine();
+				}
+			}
+			Console.WriteLine("\n");
+		}
+
+
+		public override void TsumoCheck()
+		{
+			// Clone player
+			Player tempPlayer = new(){Hand = Hand.ToList(),Meld = Meld.ToList()};
+			// sorthand
+			tempPlayer.SortHand();
+			IsWin = Establish(FindProbablyEye(tempPlayer.Hand), tempPlayer.Hand);
+		}
+
+
+		public override void RonCheck(Chess target)
+		{
+			IsWin = Task.Factory.StartNew(() =>
+			{
+				// Clone player
+				Player tempPlayer = new(){Hand = Hand.ToList(),Meld = Meld.ToList()};
+				// sorthand
+				tempPlayer.Hand.Add(target);
+				tempPlayer.SortHand();
+				return Establish(FindProbablyEye(tempPlayer.Hand), tempPlayer.Hand);
+			}).Result;
+		}
+
+
+		public override void Discard()
+		{
+			if (TenPai)
+			{
+				River.Add(Hand[Hand.Count - 1]);
+				Hand.RemoveAt(Hand.Count - 1);
+				return;
+			}
+			int keyint;
+			Console.Write($"Please select whitch one do you want to discard from index 1-{Hand.Count}:");
+			while (true)
+			{
+				string keystring = Console.ReadLine();
+				Console.WriteLine($"the select is: {keystring}");
+				bool err = int.TryParse(keystring,out keyint);
+				if (!err || keyint > Hand.Count || keyint < 1)
+				{
+					Console.Write("Wrong Enter Please Renter:");
+				}
+				else
+				{
+					break;
+				}
+			}
+			River.Add(Hand[keyint - 1]);
+			Hand.RemoveAt(keyint - 1);
+		}
+
+
+		public override List<Chess> FindProbablyEye(List<Chess> source)
+		{
+			(Chess,Chess) special = (
+				new(){Number= 1, Color= "b",Surface="將"},
+				new() {Number =1 , Color = "r", Surface ="帥"});
+			if (CheckContains(source, special.Item1) && CheckContains(source, special.Item2))
+			{
+				return new() { special.Item1, special.Item1 };
+			}
+
+			List<Chess> result = new();
+			for (int i = 0; i < source.Count; i++)
+			{
+				if (i != source.Count - 1 &&
+					source[i].Number == source[i + 1].Number &&
+					source[i].Color == source[i + 1].Color)
+				{
+					if (!CheckContains(result, source[i]))
+					{
+						result.Add(source[i]);
+					}
+				}
+			}
+			return result;
 		}
 
 
@@ -37,6 +230,39 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 
 		protected override bool Establish(List<Chess> probablyEye, List<Chess> hand)
 		{
+
+			if (CheckContains(probablyEye, new() { Number = 1, Color = "b", Surface = "將" }) && CheckContains(probablyEye, new() { Number = 1, Color = "r", Surface = "帥" }))
+			{
+				List<Chess> temp = hand.ToList();
+				RemoveSpecialEye(ref temp);
+				// temp is empty
+				while (temp.Any())
+				{
+					Chess first = temp[0];
+					Chess second= new(){Number= temp[0].Number+1, Color= temp[0].Color,};
+					Chess third = new(){Number = temp[0].Number +2, Color = temp[0].Color,};
+					if (CheckContains(temp, second) && CheckContains(temp, third))
+					{
+						temp.Remove(first);
+						temp.RemoveAt(FindIndex(temp, second));
+						temp.RemoveAt(FindIndex(temp, third));
+						continue;
+					}
+
+					if (ChessIsEqual(temp[0], temp[1]) &&
+						ChessIsEqual(temp[1], temp[2]) &&
+						ChessIsEqual(temp[0], temp[2]))
+					{
+						foreach (int _ in Enumerable.Range(0, 3))
+						{
+							temp.RemoveAt(FindIndex(temp, first));
+						}
+						continue;
+					}
+					break;
+
+				}
+			}
 			foreach (Chess eye in probablyEye)
 			{
 				List<Chess> temp = hand.ToList();
@@ -78,6 +304,21 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		}
 
 
+		/// <summary>
+		/// for 32-Chess remove 2 different color general from hand
+		/// </summary>
+		/// <param name="orginal"></param>
+		private void RemoveSpecialEye(ref List<Chess> orginal)
+		{
+			List<Chess> temp = orginal.ToList();
+			int index = FindIndex(temp, new (){ Number = 1, Color = "b", Surface = "將" });
+			temp.RemoveAt(index);
+			index = FindIndex(temp, new() { Number = 1, Color = "r", Surface = "帥" });
+			temp.RemoveAt(index);
+			orginal = temp;
+		}
+
+
 		protected override void RemoveEye(Chess targetEye, ref List<Chess> orginal)
 		{
 			List<Chess> temp = orginal.ToList();
@@ -89,10 +330,36 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		}
 
 
-		public void AutoDiscard()
+		/// <summary>
+		/// Rewrite FindIndex for Searches for target is matches the 
+		/// source list
+		/// </summary>
+		/// <param name="source"> list source</param>
+		/// <param name="target"> target element</param>
+		/// <returns>i is the position, Or -1 of not found</returns>
+		private static int FindIndex(List<Chess> source, Chess target)
 		{
-			River.Add(Hand[Hand.Count - 1]);
-			Hand.RemoveAt(Hand.Count - 1);
+			for (int i = 0; i < source.Count; i++)
+			{
+				if (source[i].Number == target.Number && source[i].Color == target.Color)
+				{
+					return i;
+				}
+
+			}
+			return -1;
+		}
+
+
+		/// <summary>
+		/// Rewrite Equeal to fit this case
+		/// </summary>
+		/// <param name="first">The first chess to compare.</param>
+		/// <param name="second">The second chess to compare</param>
+		/// <returns>true if the chess are considered equal; otherwise false</returns>
+		private static bool ChessIsEqual(Chess first, Chess second)
+		{
+			return first.Number == second.Number && first.Color == second.Color;
 		}
 
 
@@ -157,44 +424,15 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 
 
 		/// <summary>
-		/// Rewrite FindIndex for Searches for target is matches the 
-		/// source list
+		/// Check is tenpai or not
 		/// </summary>
-		/// <param name="source"> list source</param>
-		/// <param name="target"> target element</param>
-		/// <returns>i is the position, Or -1 of not found</returns>
-		private static int FindIndex(List<Chess> source, Chess target)
-		{
-			for (int i = 0; i < source.Count; i++)
-			{
-				if (source[i].Number == target.Number && source[i].Color == target.Color)
-				{
-					return i;
-				}
-
-			}
-			return -1;
-		}
-
-
-		/// <summary>
-		/// Rewrite Equeal to fit this case
-		/// </summary>
-		/// <param name="first">The first chess to compare.</param>
-		/// <param name="second">The second chess to compare</param>
-		/// <returns>true if the chess are considered equal; otherwise false</returns>
-		private static bool ChessIsEqual(Chess first, Chess second)
-		{
-			return first.Number == second.Number && first.Color == second.Color;
-		}
-
-
+		/// <returns></returns>
 		public bool TenPaiCheck()
 		{
 			Chess probablyChess;
 			List<Chess> temphand = Hand.ToList();
 			List<Chess> cloneForPopOne;
-			List<Chess> removeOneFromClone;
+			List<Chess> addOneFromClone;
 			List<Chess> probablywinTile = new ();
 			string[] color = new string[]{ "b","r"};
 
@@ -208,10 +446,10 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 				{
 					for (int j = 1; j < 8; j++)
 					{
-						removeOneFromClone = cloneForPopOne.ToList();
+						addOneFromClone = cloneForPopOne.ToList();
 						probablyChess = new() { Number = j, Color = c };
-						removeOneFromClone.Add(probablyChess);
-						if (ProbablyWin(removeOneFromClone))
+						addOneFromClone.Add(probablyChess);
+						if (ProbablyWin(addOneFromClone))
 						{
 							if (!CheckContains(probablywinTile, probablyChess))
 							{
@@ -225,6 +463,11 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		}
 
 
+		/// <summary>
+		/// check add one probably chess to clone for winning is establish
+		/// </summary>
+		/// <param name="source">add one probably chess to clone</param>
+		/// <returns>true if is establish,or false</returns>
 		private static bool ProbablyWin(List<Chess> source)
 		{
 			Player p = new(){Hand = source,Meld = new()};
