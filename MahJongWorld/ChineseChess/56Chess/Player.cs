@@ -4,17 +4,23 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using MahJongWorld.Abstract;
+using MahJongWorld.Shared;
 
-namespace MahJongWorld.ChineseChessMahJong._32Chess
+namespace MahJongWorld.ChineseChessMahJong._56Chess
 {
 	public class Player : AbstractPlayer<Chess>
 	{
 		public List<List<Chess>> Meld { get; set; }
+
 		public List<Chess> River { get; set; }
+
 		public int Code { get; set; }
+
 		public bool TenPai { get; set; }
+
 		public List<(Chess, Chess)> HasMeld { get; set; }
 
+		public MeldState MeldState { get; set; }
 
 
 
@@ -137,7 +143,7 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		public override void TsumoCheck()
 		{
 			// Clone player
-			Player tempPlayer = new(){Hand = Hand.ToList(),Meld = Meld.ToList()};
+			Player tempPlayer = new(){Hand = Hand.ToList()};
 			// sorthand
 			tempPlayer.SortHand();
 			IsWin = Establish(FindProbablyEye(tempPlayer.Hand), tempPlayer.Hand);
@@ -150,7 +156,7 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 			IsWin = await Task.Run(() =>
 			{
 				// Clone player
-				Player tempPlayer = new(){Hand = Hand.ToList()};
+				Player tempPlayer = new(){Hand = Hand.ToList(),Meld = Meld.ToList()};
 				// sorthand
 				tempPlayer.Hand.Add(target);
 				tempPlayer.SortHand();
@@ -190,15 +196,6 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 
 		public override List<Chess> FindProbablyEye(List<Chess> source)
 		{
-			(Chess,Chess) special = (
-				new(){Number= 1, Color= "b",Surface="將"},
-				new() {Number =1 , Color = "r", Surface ="帥"});
-			if (CheckContains(source, special.Item1) &&
-				CheckContains(source, special.Item2))
-			{
-				return new() { special.Item1, special.Item1 };
-			}
-
 			List<Chess> result = new();
 			for (int i = 0; i < source.Count; i++)
 			{
@@ -232,39 +229,6 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		protected override bool Establish(List<Chess> probablyEye, List<Chess> hand)
 		{
 
-			if (CheckContains(probablyEye, new() { Number = 1, Color = "b", Surface = "將" })
-				&& CheckContains(probablyEye, new() { Number = 1, Color = "r", Surface = "帥" }))
-			{
-				List<Chess> temp = hand.ToList();
-				RemoveSpecialEye(ref temp);
-				// temp is empty
-				while (temp.Any())
-				{
-					Chess first = temp[0];
-					Chess second= new(){Number= temp[0].Number+1, Color= temp[0].Color,};
-					Chess third = new(){Number = temp[0].Number +2, Color = temp[0].Color,};
-					if (CheckContains(temp, second) && CheckContains(temp, third))
-					{
-						temp.Remove(first);
-						temp.RemoveAt(FindIndex(temp, second));
-						temp.RemoveAt(FindIndex(temp, third));
-						continue;
-					}
-
-					if (ChessIsEqual(temp[0], temp[1]) &&
-						ChessIsEqual(temp[1], temp[2]) &&
-						ChessIsEqual(temp[0], temp[2]))
-					{
-						foreach (int _ in Enumerable.Range(0, 3))
-						{
-							temp.RemoveAt(FindIndex(temp, first));
-						}
-						continue;
-					}
-					break;
-
-				}
-			}
 			foreach (Chess eye in probablyEye)
 			{
 				List<Chess> temp = hand.ToList();
@@ -303,21 +267,6 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 				}
 			}
 			return false;
-		}
-
-
-		/// <summary>
-		/// for 32-Chess remove 2 different color general from hand
-		/// </summary>
-		/// <param name="orginal"></param>
-		private void RemoveSpecialEye(ref List<Chess> orginal)
-		{
-			List<Chess> temp = orginal.ToList();
-			int index = FindIndex(temp, new (){ Number = 1, Color = "b", Surface = "將" });
-			temp.RemoveAt(index);
-			index = FindIndex(temp, new() { Number = 1, Color = "r", Surface = "帥" });
-			temp.RemoveAt(index);
-			orginal = temp;
 		}
 
 
@@ -365,13 +314,42 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		}
 
 
+		public async void CheckTripeAndQuadruple(Chess chess)
+		{
+			MeldState = await Task.Run(() =>
+			{
+				int count =0;
+				foreach (Chess c in Hand)
+				{
+					if (c.Number == chess.Number && c.Color == chess.Color)
+					{
+						count++;
+					}
+				}
+				if (count == 2)
+				{
+					return MeldState.Triple;
+				}
+				if (count == 3)
+				{
+					return MeldState.Quadruple;
+				}
+				return MeldState.None;
+			});
+		}
+
+
+
+
 		/// <summary>
 		/// Check Meld is in hand
 		/// </summary>
 		/// <param name="chess"> the previous one is discard to river </param>
 		/// <returns> true if the HasMeld contains any probably meld; otherwise, false.</returns>
-		public void CheckMeld(Chess chess)
+		public void CheckSequence(Chess chess)
 		{
+			//Check Pong and Kang 
+
 			Chess M2 = new(){Number = chess.Number-2,Color = chess.Color};
 			Chess M1 = new(){Number = chess.Number-1,Color = chess.Color};
 			Chess P1 = new(){Number = chess.Number+1,Color = chess.Color};
@@ -394,6 +372,22 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 			{
 				HasMeld.Add((Hand[FindIndex(Hand, P1)], Hand[FindIndex(Hand, P2)]));
 			}
+		}
+
+
+		private int CheckPongAndBigKang(Chess target)
+		{
+			int count =0;
+
+			foreach (Chess chess in Hand)
+			{
+				if (ChessIsEqual(chess, target))
+				{
+					count++;
+				}
+			}
+
+			return count;
 		}
 
 

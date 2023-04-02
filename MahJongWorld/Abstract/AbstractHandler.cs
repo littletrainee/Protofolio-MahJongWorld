@@ -7,8 +7,8 @@ namespace MahJongWorld.Abstract
 	public abstract class AbstractHandler<T>
 	{
 		public List<T> Players { get; set; }
-		public GameState GameState { get; set; }
-		public List<T> Order { get; set; }
+		public GameState<T> GameState { get; set; }
+		//public List<T> Order { get; set; }
 		protected PrintToConsole Print { get; set; }
 
 
@@ -60,7 +60,12 @@ namespace MahJongWorld.Abstract
 		/// <summary>
 		/// Reset Order
 		/// </summary>
-		protected abstract void ResetOrder();
+		//protected abstract void ResetOrder();
+
+		/// <summary>
+		/// Check Players[0] is Tsumo
+		/// </summary>
+		protected abstract void CheckTsumo();
 
 
 		/// <summary>
@@ -75,6 +80,19 @@ namespace MahJongWorld.Abstract
 		/// <param name="order">player list</param>
 		//public abstract void CheckRon(List<C> order);
 		public abstract void CheckRon();
+
+
+		/// <summary>
+		/// which one is ron and ron by who
+		/// </summary>
+		/// <returns>(which one ron , ron by which one)</returns>
+		protected abstract (T, T) WhoRon();
+
+		/// <summary>
+		/// Next Player Draw Chess From Wall
+		/// </summary>
+		/// <param name="nextPlayerCode"> the latter one who was after Order[0]</param>
+		protected abstract void DrawFromWall();
 
 	}
 }

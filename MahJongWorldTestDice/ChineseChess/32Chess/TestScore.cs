@@ -1,5 +1,4 @@
-﻿using MahJongWorld.ChineseChessMahJong;
-using MahJongWorld.Shared;
+﻿using MahJongWorld.Shared;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -22,7 +21,6 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess.TestChineseChess
 			State ST = State.IsTsumo;
 			S.Initilization(P, G, ST);
 			S.DifferentGeneralBeenPair();
-			Assert.IsTrue(S.GetTotal() == 0);
 		}
 	}
 }

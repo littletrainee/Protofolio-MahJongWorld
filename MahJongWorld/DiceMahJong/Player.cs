@@ -23,7 +23,7 @@ namespace MahJongWorld.DiceMahJong
 		/// Instantiate List of Hand and River, And Assignment Name from s
 		/// </summary>
 		/// <param name="s"> Set the parameter to "Name". </param>
-		public void Initialization(string s)
+		public override void Initialization(string s)
 		{
 			Name = s;
 			Hand = new();
@@ -78,6 +78,13 @@ namespace MahJongWorld.DiceMahJong
 			}
 		}
 
+		public void Roll()
+		{
+			foreach (Dice d in Hand)
+			{
+				d.Roll(new());
+			}
+		}
 
 		public override void SortHand()
 		{
@@ -106,9 +113,9 @@ namespace MahJongWorld.DiceMahJong
 		}
 
 
-		public override void RonCheck(Dice target)
+		public override async void RonCheck(Dice target)
 		{
-			Task Task = Task.Factory.StartNew(()=>
+			IsWin = await Task.Run(() =>
 			{
 				Player tempPlayer = new(){Hand= Hand.ToList()};
 				tempPlayer.Hand.Add(target);
@@ -200,10 +207,10 @@ namespace MahJongWorld.DiceMahJong
 		/// Get Dice From Previous Player
 		/// </summary>
 		/// <param name="previsousPlayerRiverDice"></param>
-		public void GetDice(ref Dice previsousPlayerRiverDice)
+		public void GetDice(ref Player player)
 		{
-			Hand.Add(previsousPlayerRiverDice);
-			previsousPlayerRiverDice = null;
+			Hand.Add(player.River);
+			player.River = null;
 		}
 	}
 }

@@ -2,5 +2,4 @@
 {
 	// declare delegate
 	public delegate void PrintToConsole();
-
 }

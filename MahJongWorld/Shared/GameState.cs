@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace MahJongWorld.Shared
 {
-	public class GameState
+	public class GameState<T>
 	{
 		private string FirstPlayer { get; set; }
 		public bool GameOn { get; set; }
@@ -48,7 +49,7 @@ namespace MahJongWorld.Shared
 		/// <summary>
 		/// Turn To Next Player
 		/// </summary>
-		public void TurnNext()
+		public void TurnNext(ref List<T> Players)
 		{
 			if (GameTurn < MaxPlayer - 1)
 			{
@@ -58,6 +59,8 @@ namespace MahJongWorld.Shared
 			{
 				GameTurn = 0;
 			}
+			Players.Add(Players[0]);
+			Players.RemoveAt(0);
 		}
 
 

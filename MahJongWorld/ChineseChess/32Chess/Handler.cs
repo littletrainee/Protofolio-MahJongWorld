@@ -151,8 +151,7 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		{
 			// declare current State
 			int choice = 0;
-			int previousPlayerCode = 0;
-			int nextPlayerCode = 0;
+			bool delaySetAutoDiscard = false;
 			State = State.CheckTsumo;
 			Score = new();
 
@@ -181,13 +180,18 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 
 					#region AskDeclareTenPai
 					case State.AskDeclareTenPai:
-						AskDeclareTenPai();
+						delaySetAutoDiscard = AskDeclareTenPai();
 						break;
 					#endregion
 
 					#region Discard
 					case State.Discard:
 						Discard();
+						if (delaySetAutoDiscard)
+						{
+							Players[0].TenPai = delaySetAutoDiscard;
+							delaySetAutoDiscard = false;
+						}
 						break;
 					#endregion
 
@@ -199,19 +203,19 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 
 					#region CheckMeld
 					case State.CheckMeld:
-						CheckMeld(ref previousPlayerCode, ref nextPlayerCode, ref choice);
+						CheckMeld(ref choice);
 						break;
 					#endregion
 
 					#region MakeMeld
 					case State.MakeMeld:
-						MakeMeld(ref previousPlayerCode, ref nextPlayerCode, ref choice);
+						MakeMeld(ref choice);
 						break;
 					#endregion
 
 					#region DrawFromWall
 					case State.DrawFromWall:
-						DrowFromWall(ref nextPlayerCode);
+						DrawFromWall();
 						break;
 						#endregion
 				}
@@ -228,37 +232,23 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		}
 
 
-		protected override void ResetOrder()
-		{
-			Order = new() { Players[GameState.GameTurn] };
-			for (int i = 0; i < Players.Count; i++)
-			{
-				if (i != GameState.GameTurn)
-				{
-					Order.Add(Players[i]);
-				}
-			}
-		}
-
-
 		/// <summary>
 		/// Check Order[0] is Tsumo
 		/// </summary>
-		private void CheckTsumo()
+		protected override void CheckTsumo()
 		{
-			ResetOrder();
-			// check Order[0] is Tsumo
-			Order[0].TsumoCheck();
-			if (Order[0].IsWin)
+			// check Players[0] is Tsumo
+			Players[0].TsumoCheck();
+			if (Players[0].IsWin)
 			{
 				State = State.IsTsumo;
 				GameState.GameOn = false;
-				Score.Initilization(Order[0], GameState, State);
+				Score.Initilization(Players[0], GameState, State);
 				return;
 			}
 			GameState.LastOne = false;
 			// if not tsumo then discard
-			GameState.NextRound(Order[0].Name);
+			GameState.NextRound(Players[0].Name);
 			State = State.CheckTenPai;
 		}
 
@@ -268,7 +258,7 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		/// </summary>
 		private void CheckTenPai()
 		{
-			if (Order[0].TenPaiCheck())
+			if (Players[0].TenPaiCheck())
 			{
 				State = State.AskDeclareTenPai;
 				return;
@@ -278,27 +268,53 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 
 
 		/// <summary>
-		/// Order[0] declare tenpai
+		/// Player[0] declare tenpai or not
 		/// </summary>
-		private void AskDeclareTenPai()
+		private bool AskDeclareTenPai()
 		{
-			Player tempPlayer = Order[0];
-			DeclareTenPai(ref tempPlayer);
+			//Player tempPlayer = Players[0];
 			State = State.Discard;
+			if (!Players[0].TenPai)
+			{
+				return DeclareTenPai();
+			}
+			return false;
 		}
 
 
 		/// <summary>
-		/// Order[0] Manual Or Auto Discard And Sort 
+		/// Ask Player to Declare TenPai
 		/// </summary>
+		/// <param name="player"> reference the player who is being asked</param>
+		public static bool DeclareTenPai()
+		{
+			string key;
+			Console.Write("Do You Want Declare TenPai?(y/n)");
+			while (true)
+			{
+				key = Console.ReadLine();
+				if (key != "y" && key != "n")
+				{
+					Console.Write("Wrong Enter Please Renter:");
+				}
+				else
+				{
+					break;
+				}
+			}
+			return key == "y";
+
+		}
+
+
 		protected override void Discard()
 		{
-			Player tempPlayer = Order[0];
 			// Discard
-			tempPlayer.Discard();
+			Players[0].Discard();
+
 
 			// SortHand
-			tempPlayer.SortHand();
+			Players[0].SortHand();
 			State = State.CheckRon;
 		}
 
@@ -306,9 +322,9 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		public override void CheckRon()
 		{
 			// each player check Ron
-			for (int i = 1; i < Order.Count; i++)
+			for (int i = 1; i < Players.Count; i++)
 			{
-				Order[i].RonCheck(Order[0].River.Last());
+				Players[i].RonCheck(Players[0].River.Last());
 			}
 			Task.WaitAll();
 
@@ -326,17 +342,13 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		}
 
 
-		/// <summary>
-		/// Return who is Ron 
-		/// </summary>
-		/// <returns>item1 is who Ron and item2 is ron by who</returns>
-		private (Player, Player) WhoRon()
+		protected override (Player, Player) WhoRon()
 		{
-			for (int i = 1; i < Order.Count; i++)
+			for (int i = 1; i < Players.Count; i++)
 			{
-				if (Order[i].IsWin)
+				if (Players[i].IsWin)
 				{
-					return (Order[i], Order[0]);
+					return (Players[i], Players[0]);
 				}
 			}
 			return (null, null);
@@ -344,30 +356,20 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 
 
 		/// <summary>
-		/// Check Which player can make meld
+		/// Check next player can make meld
 		/// </summary>
 		/// <param name="previousPlayerCode"> the one who was originally Order[0] </param>
 		/// <param name="nextPlayerCode"> the latter one who was after Order[0] </param>
 		/// <param name="choice"> the latter one who was after Order[0]'s choice</param>
-		private void CheckMeld(ref int previousPlayerCode, ref int nextPlayerCode, ref int choice)
+		private void CheckMeld(ref int choice)
 		{
-			previousPlayerCode = Order[0].Code;
-			// set nextPlayer code
-			if (previousPlayerCode + 1 == GameState.MaxPlayer)
-			{
-				nextPlayerCode = 0;
-			}
-			else
-			{
-				nextPlayerCode = previousPlayerCode + 1;
-			}
 			// if next player not tenpai
-			if (!Players[nextPlayerCode].TenPai)
+			if (!Players[1].TenPai)
 			{
-				Players[nextPlayerCode].CheckMeld(Players[previousPlayerCode].River.Last());
-				if (Players[nextPlayerCode].HasMeld.Any())
+				Players[1].CheckMeld(Players[0].River.Last());
+				if (Players[1].HasMeld.Any())
 				{
-					choice = AskMakeMeldAndChoose(Players[nextPlayerCode]);
+					choice = AskMakeMeldAndChoose(Players[1]);
 					// player is select
 					if (choice != 0)
 					{
@@ -388,19 +390,20 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		}
 
 
+
 		/// <summary>
 		/// the player make meld
 		/// </summary>
 		/// <param name="previousPlayerCode"> the one who was originally Order[0] </param>
 		/// <param name="nextPlayerCode"> the latter one who was after Order[0] </param>
 		/// <param name="choice"> the latter one who was after Order[0]'s choice</param>
-		private void MakeMeld(ref int previousPlayerCode, ref int nextPlayerCode, ref int choice)
+		private void MakeMeld(ref int choice)
 		{
-			Player tempPlayer = Players[previousPlayerCode];
-			Players[nextPlayerCode].MakeChiMeld(choice, ref tempPlayer);
-			GameState.TurnNext();
+			Player tempPlayer = Players[0];
+			Players[1].MakeChiMeld(choice, ref tempPlayer);
+			List<Player> tempPlayers = Players;
+			GameState.TurnNext(ref tempPlayers);
 			State = State.CheckTenPai;
-			ResetOrder();
 		}
 
 
@@ -490,46 +493,14 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		}
 
 
-		/// <summary>
-		/// Ask Player to Declare TenPai
-		/// </summary>
-		/// <param name="player"> the player who is being asked</param>
-		public static void DeclareTenPai(ref Player player)
-		{
-			string key;
-			Console.Write("Do You Want Declare TenPai?(y/n)");
-			while (true)
-			{
-				key = Console.ReadLine();
-				if (key != "y" && key != "n")
-				{
-					Console.Write("Wrong Enter Please Renter:");
-				}
-				else
-				{
-					break;
-				}
-			}
-			if (key == "y")
-			{
-				player.TenPai = true;
-			}
-		}
-
-
-		/// <summary>
-		/// Next Player Draw Chess From Wall
-		/// </summary>
-		/// <param name="nextPlayerCode"> the latter one who was after Order[0]</param>
-		private void DrowFromWall(ref int nextPlayerCode)
+		protected override void DrawFromWall()
 		{
 			List<Chess> tempWall = Wall.Hand;
 			GameState.LastOne = Wall.Hand.Count == 1;
-			Players[nextPlayerCode].Draw(ref tempWall);
-			GameState.TurnNext();
-			ResetOrder();
+			Players[1].Draw(ref tempWall);
+			List<Player> tempPlayers = Players;
+			GameState.TurnNext(ref tempPlayers);
 			State = State.CheckTsumo;
 		}
 	}
-
 }

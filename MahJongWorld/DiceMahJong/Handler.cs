@@ -10,6 +10,7 @@ namespace MahJongWorld.DiceMahJong
 {
 	public class Handler : AbstractHandler<Player>
 	{
+		public State State { get; set; }
 
 		public override void Start()
 		{
@@ -106,10 +107,7 @@ namespace MahJongWorld.DiceMahJong
 			// Each Player Roll Dice
 			foreach (Player player in Players)
 			{
-				foreach (Dice d in player.Hand)
-				{
-					d.Roll(new());
-				}
+				player.Roll();
 			}
 		}
 
@@ -135,58 +133,25 @@ namespace MahJongWorld.DiceMahJong
 
 		public override void Update()
 		{
+			State = State.CheckTsumo;
 			while (GameState.GameOn)
 			{
 				// print to console
 				Print();
-				ResetOrder();
-
-				// check Order[0] is Tsumo
-
-				if (IsTsumo(Order[0]))
+				switch (State)
 				{
-					GameState.GameOn = false;
-					continue;
-				}
-				GameState.TurnNext();
-				Print();
-
-				// if not tsumo then discard
-				Discard();
-				Print();
-
-				// each playercheck is ron or not
-				List<Player> tempOrder = Order;
-				//CheckRon(tempOrder);
-				CheckRon();
-				if (IsRon(WhoRon(tempOrder)))
-				{
-					GameState.GameOn = false;
-					continue;
-				}
-
-				// Order[1] IsWin set to false
-				Dice tempdice = Order[0].River;
-				Order[1].GetDice(ref tempdice);
-
-				Order[1].Hand.ForEach(x => { x.Roll(new()); });// Roll
-				Order[1].SortHand();
-				GameState.TurnNext();
-			}
-		}
-
-
-		protected override void ResetOrder()
-		{
-			Order = new()
-				{
-					Players[GameState.GameTurn]
-				};
-			for (int i = 0; i < Players.Count; i++)
-			{
-				if (i != GameState.GameTurn)
-				{
-					Order.Add(Players[i]);
+					case State.CheckTsumo:
+						CheckTsumo();
+						break;
+					case State.Discard:
+						Discard();
+						break;
+					case State.CheckRon:
+						CheckRon();
+						break;
+					case State.DrawFromWall:
+						DrawFromWall();
+						break;
 				}
 			}
 		}
@@ -196,53 +161,63 @@ namespace MahJongWorld.DiceMahJong
 		/// Print Tsumo Text To Console
 		/// </summary>
 		/// <param name="player"></param>
-		private static bool IsTsumo(Player player)
+		private void PrintTsumo()
 		{
-			player.TsumoCheck();
-			if (player.IsWin)
+			// print tsumo to console
+			Console.Write($"{Players[0].Name} is Tsumo.\nThe Hand is ");
+			for (int i = 0; i < Players[0].Hand.Count; i++)
 			{
-				// print tsumo to console
-				Console.Write($"{player.Name} is Tsumo.\nThe Hand is ");
-				for (int i = 0; i < player.Hand.Count; i++)
-				{
-					if (player.Hand[i].Number is 1 or 4)
-					{
-						Console.ForegroundColor = ConsoleColor.Red;
-						Console.Write($"{player.Hand[i].Number} ");
-						Console.ResetColor();
-					}
-					else
-					{
-						Console.Write($"{player.Hand[i].Number} ");
-					}
-				}
-				Console.Write("\tWin By ");
-				// ^1 == Count -1
-				if (player.Hand[^1].Number is 1 or 4)
+				if (Players[0].Hand[i].Number is 1 or 4)
 				{
 					Console.ForegroundColor = ConsoleColor.Red;
-					Console.WriteLine(player.Hand[^1].Number);
+					Console.Write($"{Players[0].Hand[i].Number} ");
 					Console.ResetColor();
 				}
 				else
 				{
-					Console.WriteLine(player.Hand[^1].Number);
+					Console.Write($"{Players[0].Hand[i].Number} ");
 				}
-				Console.ReadKey();
 			}
-			return player.IsWin;
+			Console.Write("\tWin By ");
+			// ^1 == Count -1
+			if (Players[0].Hand[^1].Number is 1 or 4)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(Players[0].Hand[^1].Number);
+				Console.ResetColor();
+			}
+			else
+			{
+				Console.WriteLine(Players[0].Hand[^1].Number);
+			}
+			Console.ReadLine();
+		}
 
+
+		protected override void CheckTsumo()
+		{
+
+			Players[0].TsumoCheck();
+			if (Players[0].IsWin)
+			{
+				State = State.IsTsumo;
+				PrintTsumo();
+				GameState.GameOn = false;
+				return;
+			}
+			GameState.NextRound(Players[0].Name);
+			State = State.Discard;
 		}
 
 
 		protected override void Discard()
 		{
-			Player tempPlayer = Order[0];
 			// Discard
-			tempPlayer.Discard();
+			Players[0].Discard();
 
 			// SortHand
-			tempPlayer.SortHand();
+			Players[0].SortHand();
+			State = State.CheckRon;
 		}
 
 
@@ -250,29 +225,37 @@ namespace MahJongWorld.DiceMahJong
 		/// Check Ron
 		/// </summary>
 		/// <returns></returns>
-		//public override void CheckRon(List<Player> order)
 		public override void CheckRon()
 		{
 			// each player check Ron
-			for (int i = 1; i < Order.Count; i++)
+			for (int i = 1; i < Players.Count; i++)
 			{
-				Order[i].RonCheck(Order[0].River);
+				Players[i].RonCheck(Players[0].River);
 			}
 			Task.WaitAll();
+
+			(Player,Player) pair = WhoRon();
+			if (pair.Item1 != null)
+			{
+				State = State.IsRon;
+				GameState.GameOn = false;
+				PrintRon(pair);
+				return;
+			}
+			State = State.DrawFromWall;
 		}
 
 
-
-		private static (Player, Dice) WhoRon(List<Player> order)
+		protected override (Player, Player) WhoRon()
 		{
-			for (int i = 1; i < order.Count; i++)
+			for (int i = 1; i < Players.Count; i++)
 			{
-				if (order[i].IsWin)
+				if (Players[i].IsWin)
 				{
-					return (order[i], order[0].River);
+					return (Players[i], Players[0]);
 				}
 			}
-			return (null, order[0].River);
+			return (null, null);
 		}
 
 
@@ -281,42 +264,49 @@ namespace MahJongWorld.DiceMahJong
 		/// </summary>
 		/// <param name="thisPlayer"></param>
 		/// <param name="otherPlayerRiver"></param>
-		private static bool IsRon((Player, Dice) player)
+		private static void PrintRon((Player, Player) pair)
 		{
-			if (player.Item1 != null)
+			if (pair.Item1 != null)
 			{
-				Console.WriteLine($"{player.Item1.Name} is Ron.");
+				Console.WriteLine($"{pair.Item1.Name} is Ron.");
 				Console.Write("The Hand is ");
-				for (int i = 0; i < player.Item1.Hand.Count; i++)
+				for (int i = 0; i < pair.Item1.Hand.Count; i++)
 				{
-					if (player.Item1.Hand[i].Number is 1 or 4)
+					if (pair.Item1.Hand[i].Number is 1 or 4)
 					{
 						Console.ForegroundColor = ConsoleColor.Red;
-						Console.Write($"{player.Item1.Hand[i].Number} ");
+						Console.Write($"{pair.Item1.Hand[i].Number} ");
 						Console.ResetColor();
 					}
 					else
 					{
-						Console.Write($"{player.Item1.Hand[i].Number} ");
+						Console.Write($"{pair.Item1.Hand[i].Number} ");
 					}
 				}
 				Console.Write("\tWin By ");
-				if (player.Item2.Number is 1 or 4)
+				if (pair.Item2.River.Number is 1 or 4)
 				{
 					Console.ForegroundColor = ConsoleColor.Red;
-					Console.WriteLine(player.Item2.Number);
+					Console.WriteLine(pair.Item2.River.Number);
 					Console.ResetColor();
 				}
 				else
 				{
-					Console.WriteLine(player.Item2.Number);
+					Console.WriteLine(pair.Item2.River.Number);
 				}
 				Console.ReadLine();
-				return player.Item1.IsWin;
 			}
-			return false;
+		}
+
+
+		protected override void DrawFromWall()
+		{
+			Player tempPlayer = Players[0];
+			Players[1].GetDice(ref tempPlayer);
+			Players[1].Roll();
+			Players[1].SortHand();
+			List<Player> tempPlayers = Players;
+			GameState.TurnNext(ref tempPlayers);
 		}
 	}
-
-
 }

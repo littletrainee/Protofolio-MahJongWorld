@@ -8,7 +8,6 @@ namespace MahJongWorld.Abstract
 	{
 		protected List<T> Hand { get; set; }
 		protected int Total { get; set; }
-		protected GameState GameState { get; set; }
 		protected State WinBy { get; set; }
 	}
 }
