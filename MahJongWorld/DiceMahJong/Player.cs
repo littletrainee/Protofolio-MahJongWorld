@@ -113,15 +113,15 @@ namespace MahJongWorld.DiceMahJong
 		}
 
 
-		public override async void RonCheck(Dice target)
+		public override void RonCheck(Dice target)
 		{
-			IsWin = await Task.Run(() =>
+			IsWin = Task.Run(() =>
 			{
 				Player tempPlayer = new(){Hand= Hand.ToList()};
 				tempPlayer.Hand.Add(target);
 				tempPlayer.SortHand();
 				return Establish(FindProbablyEye(tempPlayer.Hand), tempPlayer.Hand);
-			});
+			}).Result;
 		}
 
 

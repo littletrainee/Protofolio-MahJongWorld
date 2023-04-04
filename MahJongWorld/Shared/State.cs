@@ -11,7 +11,12 @@
 		CheckRon,
 		IsRon,
 		CheckMeld,
-		MakeMeld,
+		MakeTriple,
+		MakeBigQuadruple,
+		MakeSequence,
+		MakeSmallQuadruple,
+		MakeConcealedQuadruple,
+		CheckConcealedQuadruple,
 		DrawFromWall
 	}
 }

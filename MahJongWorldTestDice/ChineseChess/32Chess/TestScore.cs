@@ -16,7 +16,7 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess.TestChineseChess
 			Chess c4 = new(){Number =4,Color = "b", Surface= "車"};
 			Chess c5 = new(){Number =4, Color = "b",Surface= "車"};
 			Player P = new(){Hand = new(){ c1,c2,c3,c4,c5} };
-			GameState G = new();
+			GameState<Player> G = new();
 			Score S = new();
 			State ST = State.IsTsumo;
 			S.Initilization(P, G, ST);

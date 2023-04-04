@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 using MahJongWorld.Abstract;
 using MahJongWorld.Shared;
@@ -7,7 +9,29 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 {
 	public class Score : AbstractScore<Chess>
 	{
-		protected GameState<Player> GameState { get; set; }
+		private List<List<Chess>> Meld { get; set; }
+
+		private List<Chess> List { get; set; }
+
+		private List<Chess> Eye { get; set; }
+
+		private GameState<Player> GameState { get; set; }
+
+		private bool Concealed { get; set; }
+
+		private bool TenPai { get; set; }
+
+		private bool Bookmaker { get; set; }
+
+		private int ContinueToBookmaker { get; set; }
+
+		private int TwoKang { get; set; }
+
+		private bool WinOnTheWallTail { get; set; }
+
+
+
+
 		/// <summary>
 		/// initilization this Player, GameState and State 
 		/// </summary>
@@ -17,8 +41,23 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 		public void Initilization(Player player, GameState<Player> gameState, State state)
 		{
 			Hand = player.Hand;
+			Meld = player.Meld;
 			GameState = gameState;
+			SetList();
+			Eye = player.Eye;
 			WinBy = state;
+			Concealed = player.Concealed;
+			TenPai = player.TenPai;
+			Bookmaker = player.BookMaker;
+			ContinueToBookmaker = player.ContinueToBookmaker;
+			TwoKang = player.TwoKang;
+		}
+
+
+		private void SetList()
+		{
+			List = Hand.ToList();
+			Meld.ForEach(meld => List.AddRange(meld));
 		}
 
 
@@ -29,95 +68,57 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 		{
 			if (GameState.GameRound == 0 && GameState.GameTurn == 0)
 			{
-				Total += 6;
-				Console.WriteLine("天胡        6台");
+				Total += 8;
+				Console.WriteLine("天胡        8台");
 			}
 		}
 
 
 		/// <summary>
-		/// 五兵合縱、五卒連橫 
+		/// 將帥領兵、斷頭尾
 		/// </summary>
-		private void FiveSolider()
+		private void OnlyOrNoGeneralAndSorider()
 		{
-			if (Five(new() { Number = 7, Color = "b" }))
+			for (int i = 0; i < List.Count; i++)
 			{
-				Total += 5;
-				Console.WriteLine("五卒連橫    5台");
-			}
-			if (Five(new() { Number = 7, Color = "r" }))
-			{
-
-				Total += 5;
-				Console.WriteLine("五兵合縱    5台");
-			}
-		}
-
-
-		/// <summary>
-		/// check hand is all equal to compare
-		/// </summary>
-		/// <param name="compare"> compare by <paramref name="compare"/></param>
-		/// <returns>true is all same;or false</returns>
-		private bool Five(Chess compare)
-		{
-			foreach (Chess chess in Hand)
-			{
-				if (chess.Number != compare.Number || chess.Color != compare.Color)
+				if (List[i].Number is not 1 or 7)
 				{
-					return false;
+					break;
+				}
+				if (i == List.Count - 1)
+				{
+					Total += 2;
+					Console.WriteLine("將帥領兵    2台");
 				}
 			}
-			return true;
-		}
-
-
-		/// <summary>
-		/// 將帥聽令
-		/// </summary>
-		public void DifferentGeneralBeenPair()
-		{
-			if (CheckContains(new() { Number = 1, Color = "b" }) && CheckContains(new() { Number = 1, Color = "r" }))
+			for (int i = 0; i < List.Count; i++)
 			{
-				Total += 2;
-				Console.WriteLine("將帥聽令    2台");
-			}
-
-		}
-
-
-		/// <summary>
-		/// check hand is contain <paramref name="compare"/>
-		/// </summary>
-		/// <param name="compare"></param>
-		/// <returns>true is contains <paramref name="compare"/>;or false</returns>
-		private bool CheckContains(Chess compare)
-		{
-			foreach (Chess chess in Hand)
-			{
-				if (chess.Number == compare.Number && chess.Color == compare.Color)
+				if (List[i].Number is not 1 or 7)
 				{
-					return true;
+					if (i == List.Count - 1)
+					{
+						Total += 1;
+						Console.WriteLine("斷頭尾      1台");
+					}
+					else
+					{
+						continue;
+					}
+				}
+				else
+				{
+					break;
 				}
 			}
-			return false;
 		}
 
 
-		/// <summary>
-		/// Tsumo Or Ron this game
-		/// </summary>
-		private void TsumoOrRon()
+		private void IsContinueToBookmaker()
 		{
-			if (WinBy == State.IsTsumo)
+			if (Bookmaker && ContinueToBookmaker > 0)
 			{
-				Total += 2;
-				Console.WriteLine("自摸        2台");
-			}
-			else
-			{
-				Total += 1;
-				Console.WriteLine("胡牌        1台");
+				Total += ContinueToBookmaker * 2;
+				Console.WriteLine($"連{ContinueToBookmaker}拉{ContinueToBookmaker}      {ContinueToBookmaker * 2}台");
 			}
 		}
 
@@ -153,6 +154,109 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 		}
 
 
+		public void FourPair()
+		{
+			if (Concealed)
+			{
+				List<Chess> temp  = List.Distinct().ToList();
+				if (temp.Count == 4)
+				{
+					Total += 1;
+					Console.Write("四對子      1台");
+				}
+			}
+		}
+
+
+		private void IsBookmaker()
+		{
+			if (Bookmaker)
+			{
+				Total += 1;
+				Console.WriteLine("莊家        1台");
+			}
+		}
+
+
+		private void IsTenPai()
+		{
+			Total += 1;
+			Console.WriteLine("聽牌        1台");
+		}
+
+
+		private void OneDragon()
+		{
+			// check color 
+			string Color = List[0].Color;
+			foreach (Chess chess in List)
+			{
+				if (!chess.Color.Equals(Color))
+				{
+					return;
+				}
+			}
+			int[] compare = new int[]{1,2,3,4,5,6,7,7};
+			List<Chess> temp = Sort().ToList();
+			for (int i = 0; i < compare.Length; i++)
+			{
+				if (temp[i].Number != compare[i])
+				{
+					break;
+				}
+				if (i == compare.Length - 1)
+				{
+					Total += 4;
+					Console.WriteLine("一條龍      4台");
+				}
+			}
+		}
+
+
+		private List<Chess> Sort()
+		{
+			List<Chess> temp = new();
+			for (int i = 0; i < List.Count; i++)
+			{
+				foreach (Chess chess in List)
+				{
+					if (chess.Number == i)
+					{
+						temp.Add(chess);
+					}
+				}
+			}
+			return temp;
+		}
+
+
+		private void TwoDragonHug()
+		{
+			if (Concealed && Eye.Count == 1)
+			{
+				List<Chess> temp = Sort().ToList();
+				for (int i = 0; i < 2; i++)
+				{
+					temp.RemoveAt(Player.FindIndex(temp, Eye[0]));
+				}
+				for (int i = 0; i < 6; i += 2)
+				{
+					if (!Player.ChessIsEqual(temp[i], temp[i]) || temp[i].Number != temp[i + 2].Number)
+					{
+						break;
+					}
+
+					if (i == temp.Count - 2)
+					{
+						Total += 4;
+						Console.WriteLine("雙龍抱      4台");
+					}
+				}
+			}
+
+		}
+
+
 		/// <summary>
 		/// check is win on the last one from wall
 		/// </summary>
@@ -160,8 +264,107 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 		{
 			if (GameState.LastOne)
 			{
+				if (WinBy == State.IsTsumo)
+				{
+					Total += 3;
+					Console.WriteLine("海底撈月    3台");
+				}
+				else
+				{
+					Total += 1;
+					Console.WriteLine("河底撈魚    1台");
+				}
+			}
+		}
+
+
+		private void ConcealedAndTsumo()
+		{
+			if (Concealed && WinBy == State.IsTsumo)
+			{
+				Total += 3;
+				Console.WriteLine("門清自摸    3台");
+			}
+			if (Concealed && WinBy == State.IsRon)
+			{
 				Total += 1;
-				Console.WriteLine("海底撈月    1台");
+				Console.WriteLine("門清        1台");
+				Total += 1;
+				Console.WriteLine("胡牌        1台");
+			}
+			if (!Concealed && WinBy == State.IsTsumo)
+			{
+				Total += 1;
+				Console.WriteLine("自摸        1台");
+			}
+			if (!Concealed && WinBy == State.IsRon)
+			{
+				Total += 1;
+				Console.WriteLine("胡牌        1台");
+			}
+		}
+
+
+		private void AllPaired()
+		{
+			if (Eye.Count == 1)
+			{
+				List<Chess> temp = Sort().ToList();
+				for (int i = 0; i < 2; i++)
+				{
+					temp.RemoveAt(Player.FindIndex(temp, Eye[0]));
+				}
+				for (int i = 0; i < 2; i++)
+				{
+					if (Player.ChessIsEqual(temp[0], temp[1]) && Player.ChessIsEqual(temp[1], temp[2]))
+					{
+						for (int j = 0; j < 3; j++)
+						{
+							temp.RemoveAt(0);
+						}
+					}
+				}
+				if (!temp.Any())
+				{
+					Total += 1;
+					Console.WriteLine("碰碰胡      2台");
+				}
+			}
+
+		}
+
+
+		private void IsTwoKang()
+		{
+			if (TwoKang == 2)
+			{
+				Total += 2;
+				Console.WriteLine("二槓子      2台");
+			}
+		}
+
+
+		private void IsWinOnTheWallTail()
+		{
+			if (WinOnTheWallTail)
+			{
+				Total += 2;
+				Console.WriteLine("槓上開花    2台");
+			}
+		}
+
+
+		private void AllOrHalfRequire()
+		{
+			if (Meld.Count == 2 && WinBy == State.IsTsumo)
+			{
+				Total += 2;
+				Console.WriteLine("全求        2台");
+			}
+			if (Meld.Count == 2 && WinBy == State.IsRon)
+			{
+				Total += 1;
+				Console.WriteLine("半求        1台");
 			}
 		}
 
@@ -171,12 +374,29 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 		/// </summary>
 		public void PrintPatterns()
 		{
+			Console.WriteLine("牌型        台數");
+			Console.WriteLine("---------------");
 			TenHou();
+			IsTenPai();
+			IsBookmaker();
+			IsContinueToBookmaker();
+			OnlyOrNoGeneralAndSorider();
+			ConcealedAndTsumo();
+			AllOrHalfRequire();
+			IsWinOnTheWallTail();
 			WinOnLastOne();
-			TsumoOrRon();
 			SameColor();
-			DifferentGeneralBeenPair();
-			FiveSolider();
+			if (Eye.Count != 4)
+			{
+				AllPaired();
+				IsTwoKang();
+				TwoDragonHug();
+				OneDragon();
+			}
+			else
+			{
+				FourPair();
+			}
 			Console.WriteLine("===============");
 			Console.WriteLine($"共：        {Total}台\n");
 		}

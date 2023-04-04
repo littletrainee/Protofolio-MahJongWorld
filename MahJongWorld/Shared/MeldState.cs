@@ -5,8 +5,8 @@
 		None,
 		Sequence,
 		Triple,
-		Quadruple,
-		BigKang,
-		ConcealedKang
+		BigQuadruple,
+		SmallQuadruple,
+		ConcealedQuadruple
 	}
 }

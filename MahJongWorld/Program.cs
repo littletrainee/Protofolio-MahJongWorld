@@ -1,4 +1,4 @@
-﻿using MahJongWorld.ChineseChessMahJong._32Chess;
+﻿using MahJongWorld.ChineseChessMahJong._56Chess;
 
 namespace MahJongWorld
 {

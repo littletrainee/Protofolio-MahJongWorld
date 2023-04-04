@@ -22,6 +22,16 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 
 		public MeldState MeldState { get; set; }
 
+		public bool Concealed { get; set; }
+
+		public bool BookMaker { get; set; }
+
+		public int ContinueToBookmaker { get; set; }
+
+		public List<Chess> Eye { get; set; }
+
+		public int TwoKang { get; set; }
+
 
 
 		public override void Initialization(string s)
@@ -31,6 +41,8 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 			Meld = new();
 			River = new();
 			HasMeld = new();
+			Concealed = true;
+			TwoKang = 0;
 		}
 
 
@@ -82,27 +94,28 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 			Console.Write($"{Name}'s Meld: [ ");
 			foreach (List<Chess> meld in Meld)
 			{
-				foreach (Chess c in meld)
+				for (int i = 0; i < meld.Count; i++)
 				{
-					if (c == meld.First())
+					if (i == 0)
 					{
 						Console.Write("[ ");
 					}
-					if (c != meld.First())
+					if (i != 0)
 					{
 						Console.Write(", ");
 					}
-					if (c.Color == "r")
+					if (meld[i].Color == "r")
 					{
 						Console.ForegroundColor = ConsoleColor.Red;
-						Console.Write(c.Surface);
+						Console.Write(meld[i].Surface);
 						Console.ResetColor();
 					}
 					else
 					{
-						Console.Write(c.Surface);
+						Console.WriteLine(meld[i].Surface);
 					}
 				}
+
 				if (meld != Meld.Last())
 				{
 					Console.Write(", ");
@@ -150,10 +163,9 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 		}
 
 
-		public override async void RonCheck(Chess target)
+		public override void RonCheck(Chess target)
 		{
-			//IsWin = Task.Factory.StartNew(() =>
-			IsWin = await Task.Run(() =>
+			IsWin = Task.Run(() =>
 			{
 				// Clone player
 				Player tempPlayer = new(){Hand = Hand.ToList(),Meld = Meld.ToList()};
@@ -161,7 +173,7 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 				tempPlayer.Hand.Add(target);
 				tempPlayer.SortHand();
 				return Establish(FindProbablyEye(tempPlayer.Hand), tempPlayer.Hand);
-			});
+			}).Result;
 		}
 
 
@@ -228,6 +240,11 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 
 		protected override bool Establish(List<Chess> probablyEye, List<Chess> hand)
 		{
+			if (probablyEye.Count == 4)
+			{
+				Eye = probablyEye.ToList();
+				return true;
+			}
 
 			foreach (Chess eye in probablyEye)
 			{
@@ -263,6 +280,7 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 				}
 				if (!temp.Any())
 				{
+					Eye = new() { eye };
 					return true;
 				}
 			}
@@ -288,7 +306,7 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 		/// <param name="source"> list source</param>
 		/// <param name="target"> target element</param>
 		/// <returns>i is the position, Or -1 of not found</returns>
-		private static int FindIndex(List<Chess> source, Chess target)
+		public static int FindIndex(List<Chess> source, Chess target)
 		{
 			for (int i = 0; i < source.Count; i++)
 			{
@@ -308,20 +326,20 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 		/// <param name="first">The first chess to compare.</param>
 		/// <param name="second">The second chess to compare</param>
 		/// <returns>true if the chess are considered equal; otherwise false</returns>
-		private static bool ChessIsEqual(Chess first, Chess second)
+		public static bool ChessIsEqual(Chess first, Chess second)
 		{
 			return first.Number == second.Number && first.Color == second.Color;
 		}
 
 
-		public async void CheckTripeAndQuadruple(Chess chess)
+		public void CheckTripleAndBigQuadruple(Chess chess)
 		{
-			MeldState = await Task.Run(() =>
+			MeldState = Task.Run(() =>
 			{
 				int count =0;
 				foreach (Chess c in Hand)
 				{
-					if (c.Number == chess.Number && c.Color == chess.Color)
+					if (ChessIsEqual(c, chess))
 					{
 						count++;
 					}
@@ -332,13 +350,49 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 				}
 				if (count == 3)
 				{
-					return MeldState.Quadruple;
+					return MeldState.BigQuadruple;
 				}
 				return MeldState.None;
-			});
+			}).Result;
 		}
 
 
+		public void CheckSmallOrConcealedQuadruple()
+		{
+			Chess compare = Hand.Last();
+			int count=0 ;
+			//Concealed
+			foreach (Chess c in Hand)
+			{
+				if (ChessIsEqual(c, compare))
+				{
+					count++;
+				}
+			}
+			if (count == 4)
+			{
+				MeldState = MeldState.ConcealedQuadruple;
+				return;
+			}
+			//Small
+			foreach (List<Chess> meld in Meld)
+			{
+				count = 0;
+				foreach (Chess c in meld)
+				{
+					if (ChessIsEqual(c, compare))
+					{
+						count++;
+					}
+				}
+				if (count == 3)
+				{
+					MeldState = MeldState.SmallQuadruple;
+					return;
+				}
+			}
+
+		}
 
 
 		/// <summary>
@@ -375,28 +429,12 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 		}
 
 
-		private int CheckPongAndBigKang(Chess target)
-		{
-			int count =0;
-
-			foreach (Chess chess in Hand)
-			{
-				if (ChessIsEqual(chess, target))
-				{
-					count++;
-				}
-			}
-
-			return count;
-		}
-
-
 		/// <summary>
 		/// Make Chi Meld to Meld List
 		/// </summary>
 		/// <param name="choice"> which one player select.</param>
 		/// <param name="previousPlayer">the previous player.</param>
-		public void MakeChiMeld(int choice, ref Player previousPlayer)
+		public void MakeSequence(int choice, ref Player previousPlayer)
 		{
 
 			int first = FindIndex(Hand,HasMeld[choice -1].Item1);
@@ -416,6 +454,105 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 
 			// clear HasMeld
 			HasMeld = new();
+			Concealed = false;
+		}
+
+
+		public void MakeTriple(ref Player previousPlayer)
+		{
+			List<Chess> meld = new();
+			// Add three element to meld
+			for (int i = 0; i < 3; i++)
+			{
+				meld.Add(previousPlayer.River.Last());
+			}
+
+			// remove two element from hand
+			for (int i = 0; i < 2; i++)
+			{
+				Hand.RemoveAt(FindIndex(Hand, previousPlayer.River.Last()));
+			}
+
+			previousPlayer.River.RemoveAt(previousPlayer.River.Count - 1);
+			Meld.Add(meld);
+			Concealed = false;
+			MeldState = MeldState.None;
+		}
+
+
+		public void MakeBigQuadruple(ref Player previousPlayer, ref Wall wall)
+		{
+			List<Chess> meld = new();
+			// Add four element to meld
+			for (int i = 0; i < 4; i++)
+			{
+				meld.Add(previousPlayer.River.Last());
+			}
+			// remove three element from hand
+			for (int i = 0; i < 3; i++)
+			{
+				Hand.RemoveAt(FindIndex(Hand, previousPlayer.River.Last()));
+			}
+			// remove last element from previousPlayer
+			previousPlayer.River.RemoveAt(previousPlayer.River.Count - 1);
+			// Add meld to Meld List
+			Meld.Add(meld);
+			// Set Concealed to false
+			Concealed = false;
+			// draw from river last one
+			Hand.Add(wall.Hand.Last());
+			wall.Hand.RemoveAt(wall.Hand.Count - 1);
+			TwoKang++;
+			MeldState = MeldState.None;
+		}
+
+
+		public void MakeSmallQuadruple(ref Wall wall)
+		{
+			// find which meld in Meld list
+			foreach (List<Chess> meld in Meld)
+			{
+				int count =0;
+				foreach (Chess chess in meld)
+				{
+					if (ChessIsEqual(chess, Hand.Last()))
+					{
+						count++;
+					}
+				}
+				if (count == 3)
+				{
+					meld.Add(Hand.Last());
+					break;
+				}
+			}
+			// remove Last one from hand
+			Hand.RemoveAt(Hand.Count - 1);
+			// draw from wall last
+			Hand.Add(wall.Hand.Last());
+			// remove last one
+			wall.Hand.RemoveAt(wall.Hand.Count - 1);
+			TwoKang++;
+			MeldState = MeldState.None;
+		}
+
+
+		public void MakeConcealedQuadruple(ref Wall wall)
+		{
+			Chess target = Hand.Last();
+			List<Chess> meld = new();
+			for (int i = 0; i < 4; i++)
+			{
+				meld.Add(target);
+				Hand.RemoveAt(FindIndex(Hand, target));
+			}
+			Meld.Add(meld);
+			// draw from wall last
+			Hand.Add(wall.Hand.Last());
+			// remove last one
+			wall.Hand.RemoveAt(wall.Hand.Count - 1);
+			TwoKang++;
+			MeldState = MeldState.None;
 		}
 
 

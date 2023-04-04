@@ -49,7 +49,7 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 			int key;
 			while (true)
 			{
-				bool ok = int.TryParse(Console.ReadLine(),out key);
+				bool ok = int.TryParse(Console.ReadLine(), out key);
 				if (!ok || key < 2 || key > 4)
 				{
 					Console.Write("Wrong enter, Please renter: ");
@@ -207,8 +207,8 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 						break;
 					#endregion
 
-					#region MakeMeld
-					case State.MakeMeld:
+					#region MakeSequence
+					case State.MakeSequence:
 						MakeMeld(ref choice);
 						break;
 					#endregion
@@ -233,7 +233,7 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 
 
 		/// <summary>
-		/// Check Order[0] is Tsumo
+		/// Check Player[0] is Tsumo
 		/// </summary>
 		protected override void CheckTsumo()
 		{
@@ -254,7 +254,7 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 
 
 		/// <summary>
-		/// Check Order[0] can declare tenpai
+		/// Check Player[0] can declare tenpai
 		/// </summary>
 		private void CheckTenPai()
 		{
@@ -312,7 +312,6 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 			// Discard
 			Players[0].Discard();
 
-
 			// SortHand
 			Players[0].SortHand();
 			State = State.CheckRon;
@@ -328,10 +327,9 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 			}
 			Task.WaitAll();
 
-			(Player,Player) pair = WhoRon();
+			(Player, Player) pair = WhoRon();
 			if (pair.Item1 != null)
 			{
-				//TODO
 				State = State.IsRon;
 				GameState.GameOn = false;
 				Score.Initilization(pair.Item1, GameState, State);
@@ -358,9 +356,9 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		/// <summary>
 		/// Check next player can make meld
 		/// </summary>
-		/// <param name="previousPlayerCode"> the one who was originally Order[0] </param>
-		/// <param name="nextPlayerCode"> the latter one who was after Order[0] </param>
-		/// <param name="choice"> the latter one who was after Order[0]'s choice</param>
+		/// <param name="previousPlayerCode"> the one who was originally Player[0] </param>
+		/// <param name="nextPlayerCode"> the latter one who was after Player[0] </param>
+		/// <param name="choice"> the latter one who was after Player[0]'s choice</param>
 		private void CheckMeld(ref int choice)
 		{
 			// if next player not tenpai
@@ -373,7 +371,7 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 					// player is select
 					if (choice != 0)
 					{
-						State = State.MakeMeld;
+						State = State.MakeSequence;
 						return;
 					}
 				}
@@ -394,9 +392,9 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		/// <summary>
 		/// the player make meld
 		/// </summary>
-		/// <param name="previousPlayerCode"> the one who was originally Order[0] </param>
-		/// <param name="nextPlayerCode"> the latter one who was after Order[0] </param>
-		/// <param name="choice"> the latter one who was after Order[0]'s choice</param>
+		/// <param name="previousPlayerCode"> the one who was originally Player[0] </param>
+		/// <param name="nextPlayerCode"> the latter one who was after Player[0] </param>
+		/// <param name="choice"> the latter one who was after Player[0]'s choice</param>
 		private void MakeMeld(ref int choice)
 		{
 			Player tempPlayer = Players[0];

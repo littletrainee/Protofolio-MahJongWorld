@@ -42,14 +42,14 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess.TestChineseChess
 			};
 			Handler H = new()
 			{
-				Order = new()
+				Players =new()
 				{
 					p1,p2
 				}
 			};
 			H.CheckRon();
-			Console.WriteLine(H.Order[0].IsWin);
-			Console.WriteLine(H.Order[1].IsWin);
+			Console.WriteLine(H.Players[0].IsWin);
+			Console.WriteLine(H.Players[1].IsWin);
 		}
 	}
 }

@@ -144,10 +144,10 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 		}
 
 
-		public override async void RonCheck(Chess target)
+		public override void RonCheck(Chess target)
 		{
 			//IsWin = Task.Factory.StartNew(() =>
-			IsWin = await Task.Run(() =>
+			IsWin = Task.Run(() =>
 			{
 				// Clone player
 				Player tempPlayer = new(){Hand = Hand.ToList()};
@@ -155,7 +155,7 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 				tempPlayer.Hand.Add(target);
 				tempPlayer.SortHand();
 				return Establish(FindProbablyEye(tempPlayer.Hand), tempPlayer.Hand);
-			});
+			}).Result;
 		}
 
 
