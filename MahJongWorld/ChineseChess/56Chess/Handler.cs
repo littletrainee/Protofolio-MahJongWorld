@@ -18,6 +18,8 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 
 		private Score Score { get; set; }
 
+		private BookMaker BookMaker { get; set; }
+
 
 
 
@@ -62,9 +64,11 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 			}
 
 			GameState = new();
-			GameState.Initialization(key);
+			GameState.Initialization();
 			Players = new();
-			foreach (int i in Enumerable.Range(0, GameState.MaxPlayer))
+			BookMaker = new();
+			BookMaker.Initialization(key);
+			foreach (int i in Enumerable.Range(0, BookMaker.MaxPlayer))
 			{
 				Players.Add(new() { Code = i });
 			}
@@ -96,7 +100,6 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 				if (i == 0)
 				{
 					GameState.SetFirstPlayerName(Players[i].Name);
-					Players[i].BookMaker = true;
 				}
 			}
 			Wall.Name = "Wall";
@@ -154,6 +157,7 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 
 		public override void Update()
 		{
+		ReUpdate:
 			bool delaySetAutoDiscard = false;
 			// declare current State
 			State = State.CheckTsumo;
@@ -252,6 +256,11 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 				Print();
 				Score.PrintPatterns();
 				Console.ReadLine();
+				ReStart();
+				if (GameState.GameOn)
+				{
+					goto ReUpdate;
+				}
 			}
 		}
 
@@ -264,7 +273,9 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 			{
 				State = State.IsTsumo;
 				GameState.GameOn = false;
-				Score.Initilization(Players[0], GameState, State);
+				BookMaker.Winner = Players[0].Code;
+				BookMaker.WinbyWho = Players[0].Code;
+				Score.Initilization(Players[0], GameState, State, BookMaker);
 				Console.ReadKey();
 				return;
 			}
@@ -332,7 +343,9 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 			{
 				State = State.IsRon;
 				GameState.GameOn = false;
-				Score.Initilization(pair.Item1, GameState, State);
+				BookMaker.Winner = pair.Item1.Code;
+				BookMaker.WinbyWho = pair.Item2.Code;
+				Score.Initilization(pair.Item1, GameState, State, BookMaker);
 				Console.ReadLine();
 				return;
 			}
@@ -390,7 +403,7 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 						do
 						{
 							tempPlayers = Players;
-							GameState.TurnNext(ref tempPlayers);
+							GameState.TurnNext(ref tempPlayers, BookMaker.MaxPlayer);
 							GameState.NextRound(tempPlayers[0].Name);
 						} while (Players[0].Code != pair.Item1.Code);
 						return;
@@ -415,7 +428,7 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 					};
 					// turn to target player
 					tempPlayers = Players;
-					GameState.TurnNext(ref tempPlayers);
+					GameState.TurnNext(ref tempPlayers, BookMaker.MaxPlayer);
 					GameState.NextRound(tempPlayers[0].Name);
 					return;
 				}
@@ -423,7 +436,7 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 			State = State.DrawFromWall;
 			// turn to target player
 			tempPlayers = Players;
-			GameState.TurnNext(ref tempPlayers);
+			GameState.TurnNext(ref tempPlayers, BookMaker.MaxPlayer);
 			GameState.NextRound(tempPlayers[0].Name);
 		}
 
@@ -664,6 +677,46 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 			}
 			State = State.CheckTsumo;
 		}
-	}
 
+		private void ReStart()
+		{
+			Console.Write("Continue This Game?(y/n)");
+			string key;
+			while (true)
+			{
+				key = Console.ReadLine();
+				if (key is not "y" or "n")
+				{
+					Console.Write("Wrong enter please reneter:");
+				}
+				else
+				{
+					break;
+				}
+			}
+			if (key is "y")
+			{
+				BookMaker.ContinueOrNext();
+				SetWall();
+				GameState.GameOn = true;
+				GameState.GameRound = 0;
+				GameState.LastOne = false;
+				// reset each player
+				foreach (Player player in Players)
+				{
+					player.Hand = new();
+					player.Meld = new();
+					player.River = new();
+					player.TenPai = false;
+					player.HasMeld = new();
+					player.MeldState = MeldState.None;
+					player.Concealed = true;
+					player.Eye = new();
+					player.TwoKang = 0;
+				}
+				Draw();
+				SortHand();
+			}
+		}
+	}
 }

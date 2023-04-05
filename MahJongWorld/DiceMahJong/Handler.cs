@@ -12,6 +12,8 @@ namespace MahJongWorld.DiceMahJong
 	{
 		public State State { get; set; }
 
+		private BookMaker BookMaker { get; set; }
+
 		public override void Start()
 		{
 			SetEachListAndGameState();
@@ -50,9 +52,11 @@ namespace MahJongWorld.DiceMahJong
 			}
 
 			GameState = new();
-			GameState.Initialization(key);
+			GameState.Initialization();
 			Players = new();
-			foreach (int _ in Enumerable.Range(0, GameState.MaxPlayer))
+			BookMaker = new();
+			BookMaker.Initialization(key);
+			foreach (int _ in Enumerable.Range(0, BookMaker.MaxPlayer))
 			{
 				Players.Add(new());
 			}
@@ -306,7 +310,7 @@ namespace MahJongWorld.DiceMahJong
 			Players[1].Roll();
 			Players[1].SortHand();
 			List<Player> tempPlayers = Players;
-			GameState.TurnNext(ref tempPlayers);
+			GameState.TurnNext(ref tempPlayers, BookMaker.MaxPlayer);
 		}
 	}
 }

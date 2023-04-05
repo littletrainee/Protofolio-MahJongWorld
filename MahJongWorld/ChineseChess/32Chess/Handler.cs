@@ -18,6 +18,7 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 
 		private Score Score { get; set; }
 
+		private BookMaker BookMaker { get; set; }
 
 
 
@@ -62,9 +63,11 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 			}
 
 			GameState = new();
-			GameState.Initialization(key);
+			GameState.Initialization();
 			Players = new();
-			foreach (int i in Enumerable.Range(0, GameState.MaxPlayer))
+			BookMaker = new();
+			BookMaker.Initialization(key);
+			foreach (int i in Enumerable.Range(0, BookMaker.MaxPlayer))
 			{
 				Players.Add(new() { Code = i });
 			}
@@ -400,7 +403,7 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 			Player tempPlayer = Players[0];
 			Players[1].MakeChiMeld(choice, ref tempPlayer);
 			List<Player> tempPlayers = Players;
-			GameState.TurnNext(ref tempPlayers);
+			GameState.TurnNext(ref tempPlayers, BookMaker.MaxPlayer);
 			State = State.CheckTenPai;
 		}
 
@@ -497,7 +500,7 @@ namespace MahJongWorld.ChineseChessMahJong._32Chess
 			GameState.LastOne = Wall.Hand.Count == 1;
 			Players[1].Draw(ref tempWall);
 			List<Player> tempPlayers = Players;
-			GameState.TurnNext(ref tempPlayers);
+			GameState.TurnNext(ref tempPlayers, BookMaker.MaxPlayer);
 			State = State.CheckTsumo;
 		}
 	}

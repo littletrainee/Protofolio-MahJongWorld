@@ -6,12 +6,16 @@ namespace MahJongWorld.Shared
 	public class GameState<T>
 	{
 		private string FirstPlayer { get; set; }
+
 		public bool GameOn { get; set; }
+
 		public int GameTurn { get; set; }
-		public int MaxPlayer { get; set; }
+
+
 		public int GameRound { get; set; }
 
 		public bool LastOne { get; set; }
+
 
 
 
@@ -19,11 +23,10 @@ namespace MahJongWorld.Shared
 		/// Set GameOn ,GameTurn and MaxPlayer.
 		/// </summary>
 		/// <param name="maxPlayer"></param>
-		public void Initialization(int maxPlayer)
+		public void Initialization()
 		{
 			GameOn = true;
 			GameTurn = 0;
-			MaxPlayer = maxPlayer;
 		}
 
 		public void SetFirstPlayerName(string name)
@@ -49,7 +52,7 @@ namespace MahJongWorld.Shared
 		/// <summary>
 		/// Turn To Next Player
 		/// </summary>
-		public void TurnNext(ref List<T> Players)
+		public void TurnNext(ref List<T> Players, int MaxPlayer)
 		{
 			if (GameTurn < MaxPlayer - 1)
 			{

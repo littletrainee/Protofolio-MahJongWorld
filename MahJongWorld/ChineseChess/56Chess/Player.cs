@@ -24,10 +24,6 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 
 		public bool Concealed { get; set; }
 
-		public bool BookMaker { get; set; }
-
-		public int ContinueToBookmaker { get; set; }
-
 		public List<Chess> Eye { get; set; }
 
 		public int TwoKang { get; set; }
@@ -112,7 +108,7 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 					}
 					else
 					{
-						Console.WriteLine(meld[i].Surface);
+						Console.Write(meld[i].Surface);
 					}
 				}
 

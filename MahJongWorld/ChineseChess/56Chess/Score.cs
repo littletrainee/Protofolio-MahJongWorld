@@ -30,6 +30,8 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 		private bool WinOnTheWallTail { get; set; }
 
 
+		public (int, int, int) Win { get; set; }
+
 
 
 		/// <summary>
@@ -38,7 +40,7 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 		/// <param name="player"></param>
 		/// <param name="gameState"></param>
 		/// <param name="state"></param>
-		public void Initilization(Player player, GameState<Player> gameState, State state)
+		public void Initilization(Player player, GameState<Player> gameState, State state, BookMaker bookmaker)
 		{
 			Hand = player.Hand;
 			Meld = player.Meld;
@@ -48,9 +50,14 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 			WinBy = state;
 			Concealed = player.Concealed;
 			TenPai = player.TenPai;
-			Bookmaker = player.BookMaker;
-			ContinueToBookmaker = player.ContinueToBookmaker;
+			Bookmaker = bookmaker.Who == player.Code;
+			ContinueToBookmaker = bookmaker.ContinueToBookMaker;
 			TwoKang = player.TwoKang;
+		}
+
+		public void SetWin(int winner, int bywho, int bookmaker)
+		{
+			Win = new(winner, bywho, bookmaker);
 		}
 
 
@@ -180,8 +187,11 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 
 		private void IsTenPai()
 		{
-			Total += 1;
-			Console.WriteLine("聽牌        1台");
+			if (TenPai)
+			{
+				Total += 1;
+				Console.WriteLine("聽牌        1台");
+			}
 		}
 
 
