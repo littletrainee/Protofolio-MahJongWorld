@@ -276,7 +276,7 @@ namespace MahJongWorld.ChineseChessMahJong._56Chess
 				BookMaker.Winner = Players[0].Code;
 				BookMaker.WinbyWho = Players[0].Code;
 				Score.Initilization(Players[0], GameState, State, BookMaker);
-				Console.ReadKey();
+				//Console.ReadKey();
 				return;
 			}
 			GameState.LastOne = false;
